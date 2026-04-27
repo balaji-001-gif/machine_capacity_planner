@@ -73,7 +73,46 @@
       "fieldname": "manager_email",
       "fieldtype": "Data",
       "label": "Production Manager Email",
+      "description": "Receives all capacity alerts, MRP summaries and daily reports",
       "options": "Email"
+    },
+    {
+      "fieldname": "supervisor_email",
+      "fieldtype": "Data",
+      "label": "Supervisor Email",
+      "description": "Receives Critical and Stopped escalation alerts",
+      "options": "Email"
+    },
+    {
+      "fieldname": "plant_head_email",
+      "fieldtype": "Data",
+      "label": "Plant Head Email",
+      "description": "Receives Stopped escalation alerts only",
+      "options": "Email"
+    },
+    {
+      "fieldname": "section_escalation",
+      "fieldtype": "Section Break",
+      "label": "Job Card Escalation Thresholds"
+    },
+    {
+      "fieldname": "escalation_warning_hrs",
+      "fieldtype": "Float",
+      "label": "Warning After (hrs overdue)",
+      "default": "0",
+      "description": "0 = alert immediately when overdue"
+    },
+    {
+      "fieldname": "escalation_critical_hrs",
+      "fieldtype": "Float",
+      "label": "Critical After (hrs overdue)",
+      "default": "4"
+    },
+    {
+      "fieldname": "escalation_stopped_hrs",
+      "fieldtype": "Float",
+      "label": "Stopped After (hrs overdue)",
+      "default": "8"
     },
     {
       "fieldname": "enable_whatsapp",

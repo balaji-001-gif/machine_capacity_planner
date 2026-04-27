@@ -35,6 +35,12 @@ from frappe.utils import (
 from machine_capacity_planner.utils.logger import mcp_logger
 
 
+# Lazy import to avoid circular dependency
+def _get_manpower_capacity(work_centre, start_dt, delivery_deadline):
+    from machine_capacity_planner.utils.manpower_capacity import get_manpower_capacity
+    return get_manpower_capacity(work_centre, start_dt, delivery_deadline)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC API — call these from outside this module
 # ─────────────────────────────────────────────────────────────────────────────
@@ -70,25 +76,39 @@ def select_best_machine(
         )
         return None
 
-    # 2. Fetch all active child machines in the group
+    # 2. Fetch all active child machines/stations in the group
     candidates = _get_candidate_machines(wc_group)
     if not candidates:
-        mcp_logger.warning(
-            f"[MCP] No active machines found in group '{wc_group}'"
-        )
+        mcp_logger.warning(f"[MCP] No active resources found in group '{wc_group}'")
         return None
 
-    # 3. Score each candidate
+    # Determine resource type of the group
+    resource_type = frappe.db.get_value(
+        "Work Centre", wc_group, "custom_resource_type"
+    ) or "Machine"
+
+    # Skip External (Subcontracting) — handled by ERPNext Subcon module
+    if resource_type == "External":
+        mcp_logger.info(f"[MCP] Skipping External op '{operation}' — subcontracting")
+        return None
+
+    # 3. Score each candidate (machine or manpower)
     scored = []
-    for machine in candidates:
-        cap   = get_machine_capacity(machine["name"], start_dt, delivery_deadline)
+    for resource in candidates:
+        if resource_type == "Manpower":
+            cap = _get_manpower_capacity(resource["name"], start_dt, delivery_deadline)
+        else:
+            cap = get_machine_capacity(resource["name"], start_dt, delivery_deadline)
+
+        cap["material_delay_hrs"] = cap.get("material_delay_hrs", 0.0)
+        cap["material_status"]    = cap.get("material_status", "Ready")
+
         score = _calculate_score(cap, settings)
-        scored.append({**machine, **cap, "score": score})
+        scored.append({**resource, **cap, "score": score, "resource_type": resource_type})
         mcp_logger.debug(
-            f"[MCP] {machine['name']} → "
-            f"load={cap['utilisation']:.1f}% "
-            f"free={cap['free_hrs']:.1f}h "
-            f"score={score}"
+            f"[MCP] {resource['name']} ({resource_type}) → "
+            f"util={cap['utilisation']:.1f}% "
+            f"free={cap['free_hrs']:.1f}h score={score}"
         )
 
     # 4. Sort ascending — lowest score wins
@@ -168,21 +188,30 @@ def _get_settings() -> dict:
     try:
         s = frappe.get_single("Machine Selection Settings")
         return {
-            "w_load":                 s.weight_load or 30,
-            "w_free":                 s.weight_free_slot or 35,
-            "w_slack":                s.weight_delivery_slack or 25,
-            "w_maint":                s.weight_maintenance_risk or 10,
-            "overload_threshold_pct": s.overload_threshold_pct or 92,
-            "rebalance_threshold":    s.rebalance_threshold or 10,
-            "manager_email":          s.manager_email or "",
+            "w_load":                    s.weight_load or 25,
+            "w_free":                    s.weight_free_slot or 25,
+            "w_slack":                   s.weight_delivery_slack or 20,
+            "w_maint":                   s.weight_maintenance_risk or 10,
+            "w_material":                s.weight_material_readiness or 20,
+            "overload_threshold_pct":    s.overload_threshold_pct or 92,
+            "rebalance_threshold":       s.rebalance_threshold or 10,
+            "manager_email":             s.manager_email or "",
+            "supervisor_email":          s.supervisor_email or "",
+            "plant_head_email":          s.plant_head_email or "",
+            "enable_mrp_check":          bool(s.enable_mrp_check if s.enable_mrp_check is not None else 1),
+            "material_check_warehouse":  s.material_check_warehouse or "",
+            "escalation_warning_hrs":    float(s.escalation_warning_hrs or 0),
+            "escalation_critical_hrs":   float(s.escalation_critical_hrs or 4),
+            "escalation_stopped_hrs":    float(s.escalation_stopped_hrs or 8),
         }
     except Exception:
-        # Return safe defaults if settings doc not yet created
         return {
-            "w_load": 30, "w_free": 35, "w_slack": 25, "w_maint": 10,
+            "w_load": 25, "w_free": 25, "w_slack": 20, "w_maint": 10, "w_material": 20,
             "overload_threshold_pct": 92,
             "rebalance_threshold": 10,
-            "manager_email": "",
+            "manager_email": "", "supervisor_email": "", "plant_head_email": "",
+            "enable_mrp_check": True, "material_check_warehouse": "",
+            "escalation_warning_hrs": 0, "escalation_critical_hrs": 4, "escalation_stopped_hrs": 8,
         }
 
 

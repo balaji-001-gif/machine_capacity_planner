@@ -1,33 +1,61 @@
 [
   {
-    "doctype": "Custom Field",
-    "dt": "Job Card",
-    "fieldname": "custom_machine_score",
-    "fieldtype": "Float",
-    "label": "Machine Score",
-    "insert_after": "workstation",
-    "read_only": 1,
-    "description": "Composite score at time of assignment (lower = better fit)",
+    "doctype": "Custom Field", "dt": "Job Card",
+    "fieldname": "custom_machine_score", "fieldtype": "Float",
+    "label": "Machine Score", "insert_after": "workstation",
+    "read_only": 1, "description": "Composite score at time of assignment (lower = better)",
     "module": "Machine Capacity Planner"
   },
   {
-    "doctype": "Custom Field",
-    "dt": "Job Card",
-    "fieldname": "custom_allocated_by",
-    "fieldtype": "Data",
-    "label": "Allocated By",
-    "insert_after": "custom_machine_score",
-    "read_only": 1,
-    "description": "AUTO, AUTO-REBALANCE, or MANUAL:username",
+    "doctype": "Custom Field", "dt": "Job Card",
+    "fieldname": "custom_allocated_by", "fieldtype": "Data",
+    "label": "Allocated By", "insert_after": "custom_machine_score",
+    "read_only": 1, "description": "AUTO, AUTO-REBALANCE, or MANUAL:username",
     "module": "Machine Capacity Planner"
   },
   {
-    "doctype": "Custom Field",
-    "dt": "Work Centre",
-    "fieldname": "custom_machine_group_tag",
-    "fieldtype": "Data",
-    "label": "Machine Group Tag",
-    "insert_after": "description",
+    "doctype": "Custom Field", "dt": "Job Card",
+    "fieldname": "custom_material_status", "fieldtype": "Select",
+    "label": "Material Status", "options": "Ready\nPartial\nBlocked",
+    "insert_after": "custom_allocated_by", "read_only": 1,
+    "description": "MRP material readiness at time of machine assignment",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field", "dt": "Job Card",
+    "fieldname": "custom_material_delay_hrs", "fieldtype": "Float",
+    "label": "Material Delay (hrs)", "insert_after": "custom_material_status",
+    "read_only": 1, "description": "Hours machine must wait for materials (0 = no delay)",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field", "dt": "Job Card",
+    "fieldname": "custom_escalation_status", "fieldtype": "Select",
+    "label": "Escalation Status", "options": "\nWarning\nCritical\nStopped",
+    "insert_after": "custom_material_delay_hrs", "read_only": 1,
+    "description": "Set automatically when Job Card is overdue",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field", "dt": "Work Centre",
+    "fieldname": "custom_resource_type", "fieldtype": "Select",
+    "label": "Resource Type", "options": "Machine\nManpower\nExternal",
+    "default": "Machine", "insert_after": "description",
+    "description": "Machine=CNC/CMM | Manpower=Stores/Quality | External=Subcon",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field", "dt": "Work Centre",
+    "fieldname": "custom_operators_count", "fieldtype": "Int",
+    "label": "Number of Operators", "default": "1",
+    "insert_after": "custom_resource_type",
+    "description": "Man-hour capacity = shift_hrs x operators_count (Manpower type only)",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field", "dt": "Work Centre",
+    "fieldname": "custom_machine_group_tag", "fieldtype": "Data",
+    "label": "Machine Group Tag", "insert_after": "custom_operators_count",
     "description": "Tag for capability filtering (e.g. CNC-TURN, LASER-CUT)",
     "module": "Machine Capacity Planner"
   }
