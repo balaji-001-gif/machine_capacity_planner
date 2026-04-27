@@ -238,7 +238,7 @@ def _get_candidate_machines(wc_group: str) -> List[Dict]:
     return frappe.get_list(
         "Workstation",
         filters={
-            "parent_work_centre": wc_group,
+            "parent_workstation": wc_group,
             "disabled":           0,
             "is_group":           0,
         },

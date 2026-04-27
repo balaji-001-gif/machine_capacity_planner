@@ -96,5 +96,29 @@
     "description": "Tag for capability filtering (e.g. CNC-TURN, LASER-CUT)",
     "module": "Machine Capacity Planner",
     "name": "Workstation-custom_machine_group_tag"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "is_group",
+    "fieldtype": "Check",
+    "label": "Is Group",
+    "default": "0",
+    "insert_after": "workstation_name",
+    "description": "Check if this is a parent group (e.g. CNC-GROUP). Groups cannot have jobs assigned to them directly.",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-is_group"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "parent_workstation",
+    "fieldtype": "Link",
+    "options": "Workstation",
+    "label": "Parent Workstation",
+    "insert_after": "is_group",
+    "description": "Select the group this machine belongs to.",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-parent_workstation"
   }
 ]
