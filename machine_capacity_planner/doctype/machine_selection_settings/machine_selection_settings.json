@@ -1,0 +1,102 @@
+{
+  "name": "Machine Selection Settings",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_single": 1,
+  "is_submittable": 0,
+  "description": "Global configuration for machine scoring weights and thresholds.",
+  "fields": [
+    {
+      "fieldname": "section_weights",
+      "fieldtype": "Section Break",
+      "label": "Scoring Weights"
+    },
+    {
+      "fieldname": "weight_load",
+      "fieldtype": "Int",
+      "label": "Weight: Utilisation Load %",
+      "default": "30",
+      "description": "Higher value penalises busy machines more"
+    },
+    {
+      "fieldname": "weight_free_slot",
+      "fieldtype": "Int",
+      "label": "Weight: Earliest Free Slot",
+      "default": "35",
+      "description": "Higher value prioritises machines that can start sooner"
+    },
+    {
+      "fieldname": "weight_delivery_slack",
+      "fieldtype": "Int",
+      "label": "Weight: Delivery Slack",
+      "default": "25",
+      "description": "Higher value penalises tight delivery windows more"
+    },
+    {
+      "fieldname": "weight_maintenance_risk",
+      "fieldtype": "Int",
+      "label": "Weight: Maintenance Risk",
+      "default": "10",
+      "description": "Higher value avoids machines with upcoming maintenance"
+    },
+    {
+      "fieldname": "section_thresholds",
+      "fieldtype": "Section Break",
+      "label": "Thresholds and Behaviour"
+    },
+    {
+      "fieldname": "overload_threshold_pct",
+      "fieldtype": "Int",
+      "label": "Overload Threshold %",
+      "default": "92",
+      "description": "Utilisation above this triggers capacity alert emails"
+    },
+    {
+      "fieldname": "rebalance_threshold",
+      "fieldtype": "Int",
+      "label": "Rebalance Min Score Improvement",
+      "default": "10",
+      "description": "Minimum score improvement needed before reassigning a Job Card"
+    },
+    {
+      "fieldname": "rebalance_interval_mins",
+      "fieldtype": "Int",
+      "label": "Rebalance Interval (minutes)",
+      "default": "30"
+    },
+    {
+      "fieldname": "section_notifications",
+      "fieldtype": "Section Break",
+      "label": "Notifications"
+    },
+    {
+      "fieldname": "manager_email",
+      "fieldtype": "Data",
+      "label": "Production Manager Email",
+      "options": "Email"
+    },
+    {
+      "fieldname": "enable_whatsapp",
+      "fieldtype": "Check",
+      "label": "Enable WhatsApp Alerts",
+      "default": "0"
+    },
+    {
+      "fieldname": "whatsapp_number",
+      "fieldtype": "Data",
+      "label": "WhatsApp Number (with country code)"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Manufacturing Manager",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

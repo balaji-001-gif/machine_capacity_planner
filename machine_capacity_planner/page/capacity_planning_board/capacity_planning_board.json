@@ -1,0 +1,12 @@
+{
+  "name": "capacity_planning_board",
+  "doctype": "Page",
+  "module": "Machine Capacity Planner",
+  "page_name": "capacity_planning_board",
+  "title": "Capacity Planning Board",
+  "roles": [
+    {"role": "Manufacturing Manager"},
+    {"role": "Manufacturing User"},
+    {"role": "System Manager"}
+  ]
+}

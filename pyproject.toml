@@ -1,0 +1,16 @@
+[project]
+name = "machine_capacity_planner"
+version = "1.0.0"
+description = "Intelligent machine capacity selection engine for ERPNext v15+"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["machine_capacity_planner/tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+
+[tool.flake8]
+max-line-length = 120
+exclude = [".git", "__pycache__", "*.pyc"]

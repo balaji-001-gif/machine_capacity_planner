@@ -1,0 +1,17 @@
+{
+  "name": "Capacity Forecast",
+  "doctype": "Report",
+  "report_type": "Script Report",
+  "module": "Machine Capacity Planner",
+  "ref_doctype": "Work Order",
+  "is_standard": "Yes",
+  "description": "Projects daily machine utilisation for the next N days.",
+  "filters": [
+    {
+      "fieldname": "forecast_days",
+      "label": "Forecast Days",
+      "fieldtype": "Int",
+      "default": "7"
+    }
+  ]
+}

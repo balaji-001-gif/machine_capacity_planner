@@ -1,0 +1,55 @@
+/* ============================================================
+   Capacity Planning Board — custom CSS
+   Loaded via hooks.py → page_js entry
+   ============================================================ */
+
+/* Board layout */
+.mcp-board {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Machine card hover effect */
+.mcp-machine-row > div > div {
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+    cursor: default;
+}
+.mcp-machine-row > div > div:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Group header */
+.mcp-group h5 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* Summary card */
+.mcp-summary > div > div {
+    transition: opacity 0.2s;
+}
+.mcp-summary > div > div:hover {
+    opacity: 0.9;
+}
+
+/* Responsive: stack to 2 cols on tablet */
+@media (max-width: 900px) {
+    .mcp-machine-row > div {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .mcp-summary > div {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Responsive: single col on mobile */
+@media (max-width: 576px) {
+    .mcp-machine-row > div,
+    .mcp-summary > div {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

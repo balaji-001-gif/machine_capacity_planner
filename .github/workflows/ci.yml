@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  # ── Step 1: Lint ───────────────────────────────────────────────────────────
+  lint:
+    name: Lint (flake8 + black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lint tools
+        run: pip install flake8 black
+
+      - name: flake8 check
+        run: flake8 machine_capacity_planner/ --max-line-length=120 --exclude=__pycache__
+
+      - name: black format check
+        run: black --check machine_capacity_planner/
+
+  # ── Step 2: Unit Tests ────────────────────────────────────────────────────
+  test:
+    name: Unit Tests (pytest + coverage)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-mock coverage
+
+      - name: Run tests with coverage
+        run: |
+          coverage run -m pytest machine_capacity_planner/tests/ -v
+          coverage report --fail-under=70
+          coverage xml
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: coverage.xml
+          fail_ci_if_error: false
+
+  # ── Step 3: Security Scan ─────────────────────────────────────────────────
+  security:
+    name: Security Scan (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install bandit
+      - run: bandit -r machine_capacity_planner/ -ll --exclude machine_capacity_planner/tests
+
+  # ── Step 4: JSON Validation ───────────────────────────────────────────────
+  json-validate:
+    name: Validate DocType JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all JSON files
+        run: |
+          for f in $(find machine_capacity_planner -name "*.json"); do
+            python3 -m json.tool "$f" > /dev/null && echo "✅ $f" || (echo "❌ $f" && exit 1)
+          done
