@@ -67,7 +67,3 @@ has_permission = {
     "Machine Selection Log": "machine_capacity_planner.permissions.has_permission",
 }
 
-# ── Page JS ───────────────────────────────────────────────────────────────────
-page_js = {
-    "capacity_planning_board": "public/js/capacity_planning_board.js"
-}
