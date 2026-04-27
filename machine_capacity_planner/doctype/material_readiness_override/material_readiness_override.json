@@ -1,0 +1,20 @@
+{
+  "name": "Material Readiness Override",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_single": 0,
+  "is_submittable": 0,
+  "description": "Manager confirms material availability verbally / outside system — bypasses MRP check.",
+  "fields": [
+    {"fieldname": "work_order",     "fieldtype": "Link",     "options": "Work Order", "label": "Work Order", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "item_code",      "fieldtype": "Link",     "options": "Item",       "label": "Item Code (optional — leave blank to override all items)"},
+    {"fieldname": "expected_date",  "fieldtype": "Date",     "label": "Confirmed Arrival Date", "reqd": 1},
+    {"fieldname": "confirmed_by",   "fieldtype": "Link",     "options": "User",       "label": "Confirmed By", "default": "__user", "read_only": 1},
+    {"fieldname": "notes",          "fieldtype": "Text",     "label": "Notes / Supplier Confirmation Ref"},
+    {"fieldname": "override_date",  "fieldtype": "Datetime", "label": "Override Created", "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Manufacturing Manager", "read": 1, "write": 1, "create": 1, "delete": 1},
+    {"role": "System Manager",        "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

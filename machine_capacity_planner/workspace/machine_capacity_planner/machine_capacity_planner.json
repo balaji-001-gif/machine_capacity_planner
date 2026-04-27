@@ -29,6 +29,11 @@
           "type":  "Report",
           "name":  "Capacity Forecast",
           "label": "Capacity Forecast"
+        },
+        {
+          "type":  "Report",
+          "name":  "Material Machine Alignment",
+          "label": "Material-Machine Alignment"
         }
       ]
     },
@@ -49,6 +54,16 @@
           "type":  "DocType",
           "name":  "Machine Selection Log",
           "label": "Selection Log"
+        },
+        {
+          "type":  "DocType",
+          "name":  "Material Readiness Override",
+          "label": "Material Overrides"
+        },
+        {
+          "type":  "DocType",
+          "name":  "MRP Run Log",
+          "label": "MRP Run Log"
         }
       ]
     }

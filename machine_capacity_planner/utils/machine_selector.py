@@ -50,6 +50,7 @@ def select_best_machine(
     start_dt,
     delivery_deadline,
     required_hours: float = 1.0,
+    work_order: str = None,
 ) -> Optional[Dict]:
     """
     Entry point: score all candidate machines and return the winner.
@@ -92,23 +93,40 @@ def select_best_machine(
         mcp_logger.info(f"[MCP] Skipping External op '{operation}' — subcontracting")
         return None
 
-    # 3. Score each candidate (machine or manpower)
+    # 3. Score each candidate (machine or manpower, with MRP for machine ops)
+    enable_mrp = settings.get("enable_mrp_check", True)
+    warehouse  = settings.get("material_check_warehouse", "")
+
     scored = []
     for resource in candidates:
         if resource_type == "Manpower":
             cap = _get_manpower_capacity(resource["name"], start_dt, delivery_deadline)
+            # Manpower ops skip MRP — materials handled before or after by stores
+            cap["material_delay_hrs"] = 0.0
+            cap["material_status"]    = "Ready"
         else:
             cap = get_machine_capacity(resource["name"], start_dt, delivery_deadline)
-
-        cap["material_delay_hrs"] = cap.get("material_delay_hrs", 0.0)
-        cap["material_status"]    = cap.get("material_status", "Ready")
+            # F5: MRP — material delay relative to THIS machine's free slot
+            material_delay_hrs = 0.0
+            material_status    = "Ready"
+            if enable_mrp and work_order and warehouse:
+                from machine_capacity_planner.utils.mrp_checker import get_material_readiness
+                from frappe.utils import add_to_date
+                machine_free_at    = add_to_date(start_dt, hours=cap["earliest_free"])
+                mat                = get_material_readiness(work_order, machine_free_at, warehouse)
+                material_delay_hrs = mat["material_delay_hrs"]
+                material_status    = mat["status"]
+            cap["material_delay_hrs"] = material_delay_hrs
+            cap["material_status"]    = material_status
 
         score = _calculate_score(cap, settings)
         scored.append({**resource, **cap, "score": score, "resource_type": resource_type})
         mcp_logger.debug(
             f"[MCP] {resource['name']} ({resource_type}) → "
             f"util={cap['utilisation']:.1f}% "
-            f"free={cap['free_hrs']:.1f}h score={score}"
+            f"free={cap['free_hrs']:.1f}h "
+            f"mat={cap.get('material_status','N/A')}(+{cap.get('material_delay_hrs',0):.1f}h) "
+            f"score={score}"
         )
 
     # 4. Sort ascending — lowest score wins
@@ -335,10 +353,11 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     """
     Compute the composite weighted score. LOWER = BETTER.
 
-    F1  Utilisation penalty   — busy machine loses
-    F2  Free-slot delay       — machine free later loses
+    F1  Utilisation penalty   — busy machine/station loses
+    F2  Free-slot delay       — resource free later loses
     F3  Delivery slack        — less buffer before deadline loses
-    F4  Maintenance risk      — maintenance window loses
+    F4  Maintenance risk      — maintenance window loses (machines only)
+    F5  Material readiness    — machine must wait for materials loses (machines only)
     """
     horizon = cap["horizon_hrs"] or 1.0
 
@@ -351,10 +370,15 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     # F3: delivery slack penalty (less free hours relative to horizon = worse)
     f3 = max(1.0 - cap["free_hrs"] / horizon, 0.0) * settings["w_slack"]
 
-    # F4: binary maintenance risk
+    # F4: binary maintenance risk (0 for manpower resources)
     f4 = cap["has_maint"] * settings["w_maint"]
 
-    return round(f1 + f2 + f3 + f4, 3)
+    # F5: material readiness — how long machine must wait for materials
+    material_delay = cap.get("material_delay_hrs", 0.0)
+    f5 = min(material_delay / horizon, 1.0) * settings.get("w_material", 0)
+
+    return round(f1 + f2 + f3 + f4 + f5, 3)
+
 
 
 def _log_selection(

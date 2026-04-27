@@ -1,0 +1,12 @@
+{
+  "name": "Material Machine Alignment",
+  "doctype": "Report",
+  "report_type": "Script Report",
+  "module": "Machine Capacity Planner",
+  "ref_doctype": "Work Order",
+  "is_standard": "Yes",
+  "description": "Shows alignment between material arrival dates and machine free slots for all open Work Orders.",
+  "filters": [
+    {"fieldname": "status", "label": "Status Filter", "fieldtype": "Select", "options": "\nAll\nAligned\nMachine Waits\nMaterial Waits\nBlocked"}
+  ]
+}

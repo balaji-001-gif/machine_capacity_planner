@@ -4,7 +4,7 @@ app_publisher   = "YOUR_ORG"
 app_description = "Intelligent machine capacity selection engine for ERPNext v15+"
 app_email       = "dev@yourorg.com"
 app_license     = "MIT"
-app_version     = "1.0.0"
+app_version     = "3.0.0"
 
 # ── Required apps ─────────────────────────────────────────────────────────────
 required_apps = ["erpnext"]
