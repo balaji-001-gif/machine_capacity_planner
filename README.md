@@ -1,89 +1,113 @@
-# Machine Capacity Planner — ERPNext Custom App
+# Standard Operating Procedure (SOP)
+# Machine Capacity Planner v3.0 — End-to-End Implementation
 
-[![ERPNext](https://img.shields.io/badge/ERPNext-v15%2B-blue)](https://erpnext.com)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-green)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-[![CI](https://github.com/YOUR_ORG/machine_capacity_planner/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/machine_capacity_planner/actions)
+**Effective Date:** 2026-04-27 | **Owner:** Production & Operations Management
 
-> Intelligent machine selection engine for ERPNext v15+.
-> Automatically assigns the best machine from a group of identical machines
-> based on delivery date, real-time load, and multi-factor capacity scoring.
+---
 
-## Features
+> [!NOTE]
+> **Purpose of this SOP**
+> This document defines the end-to-end procedures for configuring and operating the Machine Capacity Planner (MCP) app on ERPNext v15. It ensures operations are automatically assigned to the best Workstations using a 5-factor scoring engine, evaluating both machine capacity and material readiness.
 
-| Feature | Description |
-|---------|-------------|
-| Auto Machine Selection | Scores all machines; assigns the lowest scorer |
-| Delivery-Date Driven | Backward-schedules from SO delivery date |
-| Dynamic Re-balancing | Re-evaluates every 30 min; reassigns if better slot found |
-| Capacity Alerts | Email alerts when overloaded or delivery at risk |
-| Full Audit Trail | Logs every selection decision with scoring breakdown |
-| Tunable Weights | 4-factor scoring weights configurable per environment |
-| Live Dashboard | Real-time utilisation per machine group |
+---
 
-## Scoring Formula
+## 1. PHASE ONE: Initial System Configuration (One-Time Setup)
 
-```
-Score = (util%/100 × W_load)
-      + (free_slot_hrs/horizon × W_free_slot)
-      + max(1 - slack/horizon, 0) × W_slack
-      + has_maintenance × W_maint
+Before the automation engine can work, the master data must be properly configured.
 
-Lower score = better machine
-```
+### Step 1.1: Configure Workstation Groups
+The engine works by choosing the best individual machine out of a broader "Group".
+1. Go to `Manufacturing > Workstation`
+2. Click **New**
+3. Create the group (e.g., `CNC-GROUP`)
+4. **CRITICAL:** Check the box that says `Is Group`. Do not assign working hours to the group.
 
-Default weights: W_load=30, W_free_slot=35, W_slack=25, W_maint=10 (sum=100)
+### Step 1.2: Configure Individual Workstations & Resources
+You must define the individual resources that belong to the groups.
+1. Go to `Manufacturing > Workstation`
+2. Click **New** (e.g., `MCH-CNC-01`)
+3. Set **Parent Workstation** to the group you created (e.g., `CNC-GROUP`).
+4. Set the **Resource Type**:
+   - `Machine`: For standard automated equipment.
+   - `Manpower`: For manual stations (Stores, Quality, Assembly). You must also enter the **Operators Count** (e.g., 3).
+   - `External`: For subcontracting (the system will skip assigning these).
+5. Save the document.
 
-## Quick Install
+### Step 1.3: Link Operations & BOMs to Groups
+The most common implementation mistake is linking an operation to an individual machine.
+1. Go to `Manufacturing > Operation`
+2. Open an operation (e.g., `CNC Turning`)
+3. Set the **Default Workstation** to the **GROUP** (e.g., `CNC-GROUP`), *never* an individual machine like `CNC-01`.
+4. Ensure your Bill of Materials (BOM) also points to the Workstation Group.
 
-```bash
-cd ~/frappe-bench
-bench get-app https://github.com/YOUR_ORG/machine_capacity_planner
-bench --site your-site.local install-app machine_capacity_planner
-bench --site your-site.local migrate
-bench build --app machine_capacity_planner
-bench restart
-```
+---
 
-## Architecture
+## 2. PHASE TWO: Global Settings & Thresholds
 
-```
-Work Order submitted
-        │
-        ▼
-events/work_order.py  ←─── hooks.py wires this
-        │
-        ▼
-utils/machine_selector.py   (scoring engine)
-   ├── get_candidate_machines()
-   ├── get_machine_capacity()   ← utilisation, free hrs, maintenance
-   ├── _calculate_score()       ← F1+F2+F3+F4
-   ├── _log_selection()         ← writes Machine Selection Log
-   └── _create_capacity_alert() ← emails manager if all overloaded
-        │
-        ▼
-Job Card.workstation = winner["name"]
-```
+> [!IMPORTANT]
+> The scoring algorithm and escalation engines rely entirely on these settings.
 
-## Configuration
+Go to `Machine Capacity Planner > Machine Selection Settings` and configure:
 
-After install, go to **Machine Capacity Planner → Settings** and configure:
+### 2.1 Scoring Weights
+Ensure the weights total exactly 100.
+* **Utilisation Load % (e.g., 25):** Penalizes busy machines.
+* **Earliest Free Slot (e.g., 25):** Prioritizes machines that can start sooner.
+* **Delivery Slack (e.g., 20):** Penalizes tight delivery windows.
+* **Maintenance Risk (e.g., 10):** Avoids machines with upcoming maintenance.
+* **Material Readiness (e.g., 20):** Prefers machines whose free slot aligns with the expected arrival of raw materials.
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Weight: Utilisation Load % | 30 | Penalises busy machines |
-| Weight: Earliest Free Slot | 35 | Prioritises sooner-available machines |
-| Weight: Delivery Slack | 25 | Penalises tight deadlines |
-| Weight: Maintenance Risk | 10 | Avoids machines with upcoming maintenance |
-| Overload Threshold % | 92 | Above this → capacity alert |
-| Rebalance Min Improvement | 10 | Minimum score improvement to trigger reassign |
-| Production Manager Email | — | Alert recipient |
+### 2.2 MRP & Alerts
+* **Enable MRP Material Check:** Turn `ON` and set your `Global Stock Check Warehouse`.
+* **Escalation Emails:** Enter the email addresses for the Production Supervisor and Plant Head.
+* **Escalation Thresholds:** Set how many hours a Job Card can sit un-started before triggering alerts:
+  * Warning After: `0` hours
+  * Critical After: `4` hours
+  * Stopped After: `8` hours
 
-## Documentation
+---
 
-- [Installation Guide](docs/INSTALLATION.md)
-- [Contributing](docs/CONTRIBUTING.md)
+## 3. PHASE THREE: Daily Planning & Execution (The Automated Workflow)
 
-## License
+### 3.1 Generating the Plan
+1. Planners navigate to `Manufacturing > Production Plan` to generate Work Orders.
+2. Open the newly created **Work Order** and click **Submit**.
 
-MIT © YOUR_ORG
+### 3.2 The Automated Engine (Behind the Scenes)
+The moment a Work Order is submitted, the system automatically:
+1. Calculates the **Full-Part Cycle Time** based on machine hours or manpower operators.
+2. Checks **Material Readiness** via the MRP engine.
+3. Scores every Workstation in the Group out of 100.
+4. Auto-assigns the winning Workstation to the newly generated **Job Cards**.
+
+> [!TIP]
+> You can view exactly *why* a Workstation was chosen by checking the **Machine Selection Log**.
+
+### 3.3 Floor Execution
+1. Floor Supervisors and Operators open the **Capacity Planning Board**.
+2. The board visually displays the queue:
+   * 🟢 Green = Normal Load (< 75%)
+   * 🟡 Yellow = High Load (75–91%)
+   * 🔴 Red = Overloaded (≥ 92%)
+3. Operators open their assigned Job Cards and click **Start** and **Complete** as they work.
+
+---
+
+## 4. PHASE FOUR: Exception Handling & Escalations
+
+### 4.1 Automated Escalations
+If an operator does not start a Job Card on time, the system takes action:
+* **0 Hours Overdue:** A Warning email is sent to the Supervisor.
+* **4 Hours Overdue:** A Critical email is sent to the Supervisor.
+* **8 Hours Overdue:** A Stopped email is sent to the Plant Head.
+* Every alert is permanently logged in the **Escalation Log** DocType.
+
+### 4.2 Manual Overrides
+Sometimes manual intervention is required. Do not edit the Job Card directly.
+* **Machine Breakdowns:** Use the `Machine Capacity Override` DocType. Select the Job Card, choose the replacement Workstation, and select the reason (e.g., Machine Breakdown). The system reassigns it immediately.
+* **Verbal Material Confirmations:** If a supplier confirms a delivery but it's not in the system yet, use the `Material Readiness Override` DocType. This tells the MRP engine to stop penalizing that Work Order.
+
+### 4.3 Automated Background Jobs
+* **Every 30 Mins:** The Rebalancer checks all open Job Cards. If a much better Workstation has opened up, it reassigns the queue.
+* **Daily @ 5:00 AM:** The MRP Sync re-checks material availability for all open Work Orders.
+* **Daily @ 6:00 AM:** The Daily Utilisation Report is emailed to the Production Manager.
