@@ -10,7 +10,7 @@
     {"fieldname": "job_card",         "fieldtype": "Link",     "options": "Job Card",   "label": "Job Card",          "reqd": 1, "in_list_view": 1},
     {"fieldname": "work_order",       "fieldtype": "Link",     "options": "Work Order", "label": "Work Order",         "reqd": 1, "in_list_view": 1},
     {"fieldname": "operation",        "fieldtype": "Data",                              "label": "Operation",          "in_list_view": 1},
-    {"fieldname": "workstation",      "fieldtype": "Link",     "options": "Work Centre","label": "Station / Machine",  "in_list_view": 1},
+    {"fieldname": "workstation",      "fieldtype": "Link",     "options": "Work Center","label": "Station / Machine",  "in_list_view": 1},
     {"fieldname": "planned_end_time", "fieldtype": "Datetime",                          "label": "Was Due"},
     {"fieldname": "delay_hrs",        "fieldtype": "Float",                             "label": "Delay (hrs)",        "in_list_view": 1},
     {"fieldname": "escalation_level", "fieldtype": "Select",   "options": "Warning\nCritical\nStopped", "label": "Level", "in_list_view": 1},

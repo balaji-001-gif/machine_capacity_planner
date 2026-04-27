@@ -19,7 +19,7 @@
     {
       "fieldname": "selected_machine",
       "fieldtype": "Link",
-      "options": "Work Centre",
+      "options": "Work Center",
       "label": "Selected Machine",
       "reqd": 1,
       "in_list_view": 1
@@ -59,7 +59,7 @@
     {
       "fieldname": "runner_up_machine",
       "fieldtype": "Link",
-      "options": "Work Centre",
+      "options": "Work Center",
       "label": "Runner-Up Machine"
     },
     {

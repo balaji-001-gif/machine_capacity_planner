@@ -14,7 +14,7 @@
     {"fieldname": "available_items",    "fieldtype": "Int",      "label": "Available Items"},
     {"fieldname": "shortfall_items",    "fieldtype": "Int",      "label": "Shortfall Items"},
     {"fieldname": "expected_readiness", "fieldtype": "Datetime", "label": "Expected Material Readiness"},
-    {"fieldname": "machine_assigned",   "fieldtype": "Link",     "options": "Work Centre", "label": "Machine Assigned",    "in_list_view": 1},
+    {"fieldname": "machine_assigned",   "fieldtype": "Link",     "options": "Work Center", "label": "Machine Assigned",    "in_list_view": 1},
     {"fieldname": "material_delay_hrs", "fieldtype": "Float",    "label": "Material Delay (hrs)"}
   ],
   "permissions": [

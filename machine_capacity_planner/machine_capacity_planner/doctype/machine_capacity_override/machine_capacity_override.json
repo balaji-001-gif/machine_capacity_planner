@@ -32,14 +32,14 @@
     {
       "fieldname": "auto_machine",
       "fieldtype": "Link",
-      "options": "Work Centre",
+      "options": "Work Center",
       "label": "Auto-Assigned Machine",
       "read_only": 1
     },
     {
       "fieldname": "override_machine",
       "fieldtype": "Link",
-      "options": "Work Centre",
+      "options": "Work Center",
       "label": "Override To Machine",
       "reqd": 1,
       "in_list_view": 1
