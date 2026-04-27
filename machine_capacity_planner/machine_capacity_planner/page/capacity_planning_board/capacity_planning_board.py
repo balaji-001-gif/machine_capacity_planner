@@ -7,7 +7,7 @@ def get_page_context():
     return {
         "title": "Capacity Planning Board",
         "groups": frappe.get_list(
-            "Work Centre",
+            "Workstation",
             filters={"is_group": 1, "disabled": 0},
             fields=["name"],
             pluck="name",

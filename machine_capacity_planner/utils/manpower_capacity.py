@@ -1,7 +1,7 @@
 """
 manpower_capacity.py
 ====================
-Capacity scoring for human-staffed Work Centres (Stores, Quality, Verify, Assembly).
+Capacity scoring for human-staffed Workstations (Stores, Quality, Verify, Assembly).
 
 Instead of machine run-hours, tracks:
   Available man-hours = shift_hours × operators_count
@@ -18,15 +18,15 @@ from machine_capacity_planner.utils.logger import mcp_logger
 
 def get_manpower_capacity(work_centre: str, start_dt, delivery_deadline) -> dict:
     """
-    Returns capacity dict for a human-staffed Work Centre.
+    Returns capacity dict for a human-staffed Workstation.
     Same keys as get_machine_capacity() for scoring compatibility.
     """
     try:
         operators = float(
-            frappe.db.get_value("Work Centre", work_centre, "custom_operators_count") or 1
+            frappe.db.get_value("Workstation", work_centre, "custom_operators_count") or 1
         )
         shift_hrs = float(
-            frappe.db.get_value("Work Centre", work_centre, "total_working_hrs") or 8
+            frappe.db.get_value("Workstation", work_centre, "total_working_hrs") or 8
         )
     except Exception:
         operators = 1.0
@@ -73,11 +73,11 @@ def get_manpower_capacity(work_centre: str, start_dt, delivery_deadline) -> dict
 
 def get_all_manpower_station_loads() -> list:
     """
-    Returns man-hour utilisation for every active Manpower Work Centre.
+    Returns man-hour utilisation for every active Manpower Workstation.
     Called by the Planning Board Manpower Panel API.
     """
     stations = frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={"custom_resource_type": "Manpower", "disabled": 0, "is_group": 0},
         fields=["name", "custom_operators_count", "total_working_hrs"],
     )

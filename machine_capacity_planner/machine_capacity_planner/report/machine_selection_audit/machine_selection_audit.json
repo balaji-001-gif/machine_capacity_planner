@@ -17,7 +17,7 @@
       "fieldname": "machine",
       "label": "Machine",
       "fieldtype": "Link",
-      "options": "Work Center"
+      "options": "Workstation"
     }
   ]
 }

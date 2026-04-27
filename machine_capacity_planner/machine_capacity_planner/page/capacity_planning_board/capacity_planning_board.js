@@ -1,7 +1,7 @@
 /**
  * Capacity Planning Board
  * ========================
- * Live dashboard showing real-time machine load for all Work Centre Groups.
+ * Live dashboard showing real-time machine load for all Workstation Groups.
  * Auto-refreshes every 60 seconds. Allows manual rebalance trigger.
  *
  * Layout:
@@ -151,7 +151,7 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
             $main.find(".mcp-groups").html(`
                 <div style="text-align:center; padding:60px; color:#999;">
                     <div style="font-size:48px;">🏭</div>
-                    <p>No Work Centre Groups found. Add machines in Manufacturing → Work Centre.</p>
+                    <p>No Workstation Groups found. Add machines in Manufacturing → Workstation.</p>
                 </div>
             `);
         }

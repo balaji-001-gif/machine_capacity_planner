@@ -63,7 +63,7 @@
   },
   {
     "doctype": "Custom Field",
-    "dt": "Work Center",
+    "dt": "Workstation",
     "fieldname": "custom_resource_type",
     "fieldtype": "Select",
     "label": "Resource Type",
@@ -72,11 +72,11 @@
     "insert_after": "description",
     "description": "Machine=CNC/CMM | Manpower=Stores/Quality | External=Subcon",
     "module": "Machine Capacity Planner",
-    "name": "Work Center-custom_resource_type"
+    "name": "Workstation-custom_resource_type"
   },
   {
     "doctype": "Custom Field",
-    "dt": "Work Center",
+    "dt": "Workstation",
     "fieldname": "custom_operators_count",
     "fieldtype": "Int",
     "label": "Number of Operators",
@@ -84,17 +84,17 @@
     "insert_after": "custom_resource_type",
     "description": "Man-hour capacity = shift_hrs x operators_count (Manpower type only)",
     "module": "Machine Capacity Planner",
-    "name": "Work Center-custom_operators_count"
+    "name": "Workstation-custom_operators_count"
   },
   {
     "doctype": "Custom Field",
-    "dt": "Work Center",
+    "dt": "Workstation",
     "fieldname": "custom_machine_group_tag",
     "fieldtype": "Data",
     "label": "Machine Group Tag",
     "insert_after": "custom_operators_count",
     "description": "Tag for capability filtering (e.g. CNC-TURN, LASER-CUT)",
     "module": "Machine Capacity Planner",
-    "name": "Work Center-custom_machine_group_tag"
+    "name": "Workstation-custom_machine_group_tag"
   }
 ]

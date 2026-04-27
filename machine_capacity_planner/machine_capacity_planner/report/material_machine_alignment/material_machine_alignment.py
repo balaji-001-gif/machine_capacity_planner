@@ -18,7 +18,7 @@ def get_columns():
     return [
         {"fieldname": "work_order",        "label": "Work Order",       "fieldtype": "Link",   "options": "Work Order",   "width": 140},
         {"fieldname": "item",              "label": "Item",             "fieldtype": "Link",   "options": "Item",         "width": 120},
-        {"fieldname": "workstation",       "label": "Machine Assigned", "fieldtype": "Link",   "options": "Work Centre",  "width": 130},
+        {"fieldname": "workstation",       "label": "Machine Assigned", "fieldtype": "Link",   "options": "Workstation",  "width": 130},
         {"fieldname": "machine_free_at",   "label": "Machine Free At",  "fieldtype": "Datetime","width": 140},
         {"fieldname": "material_ready_at", "label": "Material Ready At","fieldtype": "Datetime","width": 140},
         {"fieldname": "gap_hrs",           "label": "Gap (hrs)",        "fieldtype": "Float",  "width": 90,

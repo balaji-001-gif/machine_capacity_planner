@@ -55,7 +55,7 @@ def get_full_cycle_time(work_order: str) -> dict:
 
     for jc in jcs:
         rtype  = frappe.db.get_value(
-            "Work Centre", jc.workstation, "custom_resource_type"
+            "Workstation", jc.workstation, "custom_resource_type"
         ) or "Machine"
         op_hrs = float(jc.time_in_mins or 0) / 60.0
 

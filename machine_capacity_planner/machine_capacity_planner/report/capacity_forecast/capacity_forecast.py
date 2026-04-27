@@ -18,7 +18,7 @@ def get_columns(filters):
             "fieldname": "machine",
             "label":     "Machine",
             "fieldtype": "Link",
-            "options":   "Work Centre",
+            "options":   "Workstation",
             "width":     130,
         },
     ]
@@ -36,7 +36,7 @@ def get_columns(filters):
 def get_data(filters):
     days   = int((filters or {}).get("forecast_days", 7))
     groups = frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={"is_group": 1, "disabled": 0},
         fields=["name"],
     )

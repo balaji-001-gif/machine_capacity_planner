@@ -69,7 +69,7 @@ def select_best_machine(
     """
     settings = _get_settings()
 
-    # 1. Resolve the Work Centre Group for this operation
+    # 1. Resolve the Workstation Group for this operation
     wc_group = frappe.db.get_value("Operation", operation, "workstation")
     if not wc_group:
         mcp_logger.warning(
@@ -85,7 +85,7 @@ def select_best_machine(
 
     # Determine resource type of the group
     resource_type = frappe.db.get_value(
-        "Work Centre", wc_group, "custom_resource_type"
+        "Workstation", wc_group, "custom_resource_type"
     ) or "Machine"
 
     # Skip External (Subcontracting) — handled by ERPNext Subcon module
@@ -234,9 +234,9 @@ def _get_settings() -> dict:
 
 
 def _get_candidate_machines(wc_group: str) -> List[Dict]:
-    """Return all enabled, non-group Work Centres that are children of wc_group."""
+    """Return all enabled, non-group Workstations that are children of wc_group."""
     return frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={
             "parent_work_centre": wc_group,
             "disabled":           0,
@@ -249,12 +249,12 @@ def _get_candidate_machines(wc_group: str) -> List[Dict]:
 def _get_gross_available_hours(machine: str, start_dt, end_dt) -> float:
     """
     Calculate total available shift hours for the machine in the date range.
-    Uses the Work Centre's total_working_hrs field and subtracts holiday days.
+    Uses the Workstation's total_working_hrs field and subtracts holiday days.
     """
     horizon_days = max(time_diff_in_hours(end_dt, start_dt) / 24, 1)
 
     wc = frappe.db.get_value(
-        "Work Centre", machine,
+        "Workstation", machine,
         ["total_working_hrs", "holiday_list"],
         as_dict=True,
     )

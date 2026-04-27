@@ -30,7 +30,7 @@ def send_daily_capacity_summary():
         return
 
     groups = frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={"is_group": 1, "disabled": 0},
         fields=["name"],
     )

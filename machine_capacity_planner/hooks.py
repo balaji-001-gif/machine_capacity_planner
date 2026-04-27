@@ -19,7 +19,7 @@ doc_events = {
     "Job Card": {
         "on_submit": "machine_capacity_planner.events.job_card.on_submit",
     },
-    "Work Center": {
+    "Workstation": {
         "after_save": "machine_capacity_planner.events.work_centre.after_save",
         "on_update":  "machine_capacity_planner.events.work_centre.on_update",
     },

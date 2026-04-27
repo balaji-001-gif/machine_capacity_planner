@@ -13,7 +13,7 @@ def execute(filters=None):
 def get_columns():
     return [
         {"fieldname": "wc_group",       "label": "Group",         "fieldtype": "Data",    "width": 130},
-        {"fieldname": "machine",        "label": "Machine",       "fieldtype": "Link",    "options": "Work Centre", "width": 120},
+        {"fieldname": "machine",        "label": "Machine",       "fieldtype": "Link",    "options": "Workstation", "width": 120},
         {"fieldname": "gross_hrs",      "label": "Gross Hrs",     "fieldtype": "Float",   "width": 100},
         {"fieldname": "committed_hrs",  "label": "Booked Hrs",    "fieldtype": "Float",   "width": 100},
         {"fieldname": "free_hrs",       "label": "Free Hrs",      "fieldtype": "Float",   "width": 90},
@@ -28,7 +28,7 @@ def get_data(filters):
     to_date   = (filters or {}).get("to_date")   or frappe.utils.add_days(from_date, 7)
 
     groups = frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={"is_group": 1, "disabled": 0},
         fields=["name"],
     )
