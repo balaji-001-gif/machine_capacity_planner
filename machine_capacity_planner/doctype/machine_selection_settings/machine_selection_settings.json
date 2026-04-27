@@ -15,21 +15,21 @@
       "fieldname": "weight_load",
       "fieldtype": "Int",
       "label": "Weight: Utilisation Load %",
-      "default": "30",
+      "default": "25",
       "description": "Higher value penalises busy machines more"
     },
     {
       "fieldname": "weight_free_slot",
       "fieldtype": "Int",
       "label": "Weight: Earliest Free Slot",
-      "default": "35",
+      "default": "25",
       "description": "Higher value prioritises machines that can start sooner"
     },
     {
       "fieldname": "weight_delivery_slack",
       "fieldtype": "Int",
       "label": "Weight: Delivery Slack",
-      "default": "25",
+      "default": "20",
       "description": "Higher value penalises tight delivery windows more"
     },
     {
@@ -38,6 +38,13 @@
       "label": "Weight: Maintenance Risk",
       "default": "10",
       "description": "Higher value avoids machines with upcoming maintenance"
+    },
+    {
+      "fieldname": "weight_material_readiness",
+      "fieldtype": "Int",
+      "label": "Weight: Material Readiness",
+      "default": "20",
+      "description": "Higher value prefers machines whose free slot aligns with material arrival"
     },
     {
       "fieldname": "section_thresholds",
@@ -63,6 +70,25 @@
       "fieldtype": "Int",
       "label": "Rebalance Interval (minutes)",
       "default": "30"
+    },
+    {
+      "fieldname": "section_mrp",
+      "fieldtype": "Section Break",
+      "label": "Material Requirements Planning (MRP)"
+    },
+    {
+      "fieldname": "enable_mrp_check",
+      "fieldtype": "Check",
+      "label": "Enable MRP Material Check",
+      "default": "1",
+      "description": "When ON, machine scoring includes material readiness (F5 factor)"
+    },
+    {
+      "fieldname": "material_check_warehouse",
+      "fieldtype": "Link",
+      "options": "Warehouse",
+      "label": "Global Stock Check Warehouse",
+      "description": "Warehouse to check for raw material availability (Q2: one global warehouse)"
     },
     {
       "fieldname": "section_notifications",

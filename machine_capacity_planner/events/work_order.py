@@ -52,18 +52,21 @@ def on_submit(doc, method=None):
             start_dt          = jc.planned_start_time or now_datetime(),
             delivery_deadline = doc.expected_delivery_date,
             required_hours    = required_hrs,
+            work_order        = doc.name,       # enables MRP material check
         )
 
         if result:
             frappe.db.set_value("Job Card", jc.name, {
-                "workstation":          result["name"],
-                "custom_machine_score": result["score"],
-                "custom_allocated_by":  "AUTO",
+                "workstation":               result["name"],
+                "custom_machine_score":       result["score"],
+                "custom_allocated_by":        "AUTO",
+                "custom_material_status":     result.get("material_status", "Ready"),
+                "custom_material_delay_hrs":  result.get("material_delay_hrs", 0),
             })
             assigned_count += 1
             mcp_logger.info(
                 f"[MCP] WO {doc.name} | JC {jc.name} → {result['name']} "
-                f"(score={result['score']})"
+                f"(score={result['score']}, mat={result.get('material_status','Ready')})"
             )
         else:
             mcp_logger.error(

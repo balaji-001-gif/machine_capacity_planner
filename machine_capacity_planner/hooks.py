@@ -31,17 +31,21 @@ doc_events = {
 # ── Scheduled Tasks ───────────────────────────────────────────────────────────
 scheduler_events = {
     "cron": {
-        # Rebalance every 30 minutes during working hours Mon–Sat
-        "*/30 6-22 * * 1-6": [
+        # MRP material readiness sync — 5:00 AM every working day
+        "0 5 * * 1-6": [
+            "machine_capacity_planner.tasks.mrp_sync.sync_material_readiness"
+        ],
+        # Machine rebalancer — every 30 minutes
+        "*/30 * * * *": [
             "machine_capacity_planner.tasks.rebalancer.auto_rebalance_machines"
         ],
-        # Daily capacity summary email at 6:00 AM
+        # Daily utilisation summary — 6:00 AM
         "0 6 * * 1-6": [
-            "machine_capacity_planner.tasks.notifications.send_daily_capacity_summary"
+            "machine_capacity_planner.tasks.notifications.send_daily_utilisation_report"
         ],
-        # Weekly utilisation report every Monday 7:00 AM
+        # Weekly summary — 7:00 AM every Monday
         "0 7 * * 1": [
-            "machine_capacity_planner.tasks.notifications.send_weekly_utilisation_report"
+            "machine_capacity_planner.tasks.notifications.send_weekly_summary"
         ],
     },
 }

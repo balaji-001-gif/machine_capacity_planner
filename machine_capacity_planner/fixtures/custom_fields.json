@@ -23,6 +23,29 @@
   },
   {
     "doctype": "Custom Field",
+    "dt": "Job Card",
+    "fieldname": "custom_material_status",
+    "fieldtype": "Select",
+    "label": "Material Status",
+    "options": "Ready\nPartial\nBlocked",
+    "insert_after": "custom_allocated_by",
+    "read_only": 1,
+    "description": "MRP material readiness at time of machine assignment",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Job Card",
+    "fieldname": "custom_material_delay_hrs",
+    "fieldtype": "Float",
+    "label": "Material Delay (hrs)",
+    "insert_after": "custom_material_status",
+    "read_only": 1,
+    "description": "Estimated hours machine must wait for materials (0 = no delay)",
+    "module": "Machine Capacity Planner"
+  },
+  {
+    "doctype": "Custom Field",
     "dt": "Work Centre",
     "fieldname": "custom_machine_group_tag",
     "fieldtype": "Data",
@@ -32,3 +55,4 @@
     "module": "Machine Capacity Planner"
   }
 ]
+

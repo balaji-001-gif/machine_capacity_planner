@@ -44,6 +44,7 @@ def select_best_machine(
     start_dt,
     delivery_deadline,
     required_hours: float = 1.0,
+    work_order: str = None,
 ) -> Optional[Dict]:
     """
     Entry point: score all candidate machines and return the winner.
@@ -78,16 +79,37 @@ def select_best_machine(
         )
         return None
 
-    # 3. Score each candidate
+    # 3. Score each candidate (including material readiness per machine)
+    enable_mrp = settings.get("enable_mrp_check", True)
+    warehouse  = settings.get("material_check_warehouse", "")
+
     scored = []
     for machine in candidates:
-        cap   = get_machine_capacity(machine["name"], start_dt, delivery_deadline)
+        cap = get_machine_capacity(machine["name"], start_dt, delivery_deadline)
+
+        # F5: MRP — material delay relative to THIS machine's free slot
+        material_delay_hrs = 0.0
+        material_status    = "Ready"
+        if enable_mrp and work_order and warehouse:
+            from machine_capacity_planner.utils.mrp_checker import (
+                get_material_readiness, write_mrp_run_log
+            )
+            from frappe.utils import add_to_date
+            machine_free_at    = add_to_date(start_dt, hours=cap["earliest_free"])
+            mat                = get_material_readiness(work_order, machine_free_at, warehouse)
+            material_delay_hrs = mat["material_delay_hrs"]
+            material_status    = mat["status"]
+
+        cap["material_delay_hrs"] = material_delay_hrs
+        cap["material_status"]    = material_status
+
         score = _calculate_score(cap, settings)
         scored.append({**machine, **cap, "score": score})
         mcp_logger.debug(
             f"[MCP] {machine['name']} → "
             f"load={cap['utilisation']:.1f}% "
             f"free={cap['free_hrs']:.1f}h "
+            f"mat={material_status}(+{material_delay_hrs:.1f}h) "
             f"score={score}"
         )
 
@@ -106,7 +128,19 @@ def select_best_machine(
         _create_capacity_alert(wc_group, operation, scored, settings)
         return None
 
-    # 6. Write audit log
+    # 6. Write MRP Run Log for the winner
+    if enable_mrp and work_order and warehouse:
+        from machine_capacity_planner.utils.mrp_checker import write_mrp_run_log
+        write_mrp_run_log(work_order, winner["name"], {
+            "status":             winner.get("material_status", "Ready"),
+            "material_delay_hrs": winner.get("material_delay_hrs", 0),
+            "total_items":        0,
+            "available_items":    0,
+            "shortfall_items":    [],
+            "expected_arrival":   None,
+        })
+
+    # 7. Write audit log
     _log_selection(winner, scored, operation, delivery_deadline, required_hours)
 
     mcp_logger.info(
@@ -168,21 +202,25 @@ def _get_settings() -> dict:
     try:
         s = frappe.get_single("Machine Selection Settings")
         return {
-            "w_load":                 s.weight_load or 30,
-            "w_free":                 s.weight_free_slot or 35,
-            "w_slack":                s.weight_delivery_slack or 25,
-            "w_maint":                s.weight_maintenance_risk or 10,
-            "overload_threshold_pct": s.overload_threshold_pct or 92,
-            "rebalance_threshold":    s.rebalance_threshold or 10,
-            "manager_email":          s.manager_email or "",
+            "w_load":                   s.weight_load or 25,
+            "w_free":                   s.weight_free_slot or 25,
+            "w_slack":                  s.weight_delivery_slack or 20,
+            "w_maint":                  s.weight_maintenance_risk or 10,
+            "w_material":               s.weight_material_readiness or 20,
+            "overload_threshold_pct":   s.overload_threshold_pct or 92,
+            "rebalance_threshold":      s.rebalance_threshold or 10,
+            "manager_email":            s.manager_email or "",
+            "enable_mrp_check":         bool(s.enable_mrp_check if s.enable_mrp_check is not None else 1),
+            "material_check_warehouse": s.material_check_warehouse or "",
         }
     except Exception:
-        # Return safe defaults if settings doc not yet created
         return {
-            "w_load": 30, "w_free": 35, "w_slack": 25, "w_maint": 10,
+            "w_load": 25, "w_free": 25, "w_slack": 20, "w_maint": 10, "w_material": 20,
             "overload_threshold_pct": 92,
             "rebalance_threshold": 10,
             "manager_email": "",
+            "enable_mrp_check": True,
+            "material_check_warehouse": "",
         }
 
 
@@ -310,6 +348,7 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     F2  Free-slot delay       — machine free later loses
     F3  Delivery slack        — less buffer before deadline loses
     F4  Maintenance risk      — maintenance window loses
+    F5  Material readiness    — machine must wait for materials loses (NEW)
     """
     horizon = cap["horizon_hrs"] or 1.0
 
@@ -325,7 +364,11 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     # F4: binary maintenance risk
     f4 = cap["has_maint"] * settings["w_maint"]
 
-    return round(f1 + f2 + f3 + f4, 3)
+    # F5: material readiness — how long machine must wait for materials
+    material_delay = cap.get("material_delay_hrs", 0.0)
+    f5 = min(material_delay / horizon, 1.0) * settings.get("w_material", 0)
+
+    return round(f1 + f2 + f3 + f4 + f5, 3)
 
 
 def _log_selection(
