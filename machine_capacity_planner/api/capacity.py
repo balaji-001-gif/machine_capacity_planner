@@ -84,10 +84,10 @@ def get_job_card_queue(workstation: str) -> list:
         },
         fields=[
             "name", "operation", "work_order", "for_quantity",
-            "planned_start_time", "planned_end_time",
+            "expected_start_date", "expected_end_date",
             "status", "custom_machine_score",
         ],
-        order_by="planned_start_time asc",
+        order_by="expected_start_date asc",
     )
 
 

@@ -32,8 +32,8 @@ def on_submit(doc, method=None):
         fields=[
             "name",
             "operation",
-            "planned_start_time",
-            "planned_end_time",
+            "expected_start_date",
+            "expected_end_date",
             "for_quantity",
         ],
     )
@@ -49,7 +49,7 @@ def on_submit(doc, method=None):
 
         result = select_best_machine(
             operation         = jc.operation,
-            start_dt          = jc.planned_start_time or now_datetime(),
+            start_dt          = jc.expected_start_date or now_datetime(),
             delivery_deadline = doc.expected_delivery_date,
             required_hours    = required_hrs,
             work_order        = doc.name,       # enables MRP material check
@@ -105,8 +105,8 @@ def _estimate_required_hours(jc, wo) -> float:
     Estimate hours needed for this Job Card.
     Priority: planned times > BOM operation time > default 1 hr.
     """
-    if jc.planned_start_time and jc.planned_end_time:
-        hrs = time_diff_in_hours(jc.planned_end_time, jc.planned_start_time)
+    if jc.expected_start_date and jc.expected_end_date:
+        hrs = time_diff_in_hours(jc.expected_end_date, jc.expected_start_date)
         return max(hrs, 0.5)
 
     # Fallback: look up operation time from the BOM

@@ -34,11 +34,11 @@ def check_overdue_job_cards():
         "Job Card",
         filters={
             "status":           ["in", ["Open", "Work In Progress"]],
-            "planned_end_time": ["<",   now],
+            "expected_end_date": ["<",   now],
         },
         fields=[
             "name", "work_order", "operation", "workstation",
-            "planned_end_time", "custom_escalation_status",
+            "expected_end_date", "custom_escalation_status",
         ],
     )
 
@@ -47,7 +47,7 @@ def check_overdue_job_cards():
         return
 
     for jc in overdue_jcs:
-        delay_hrs = time_diff_in_hours(now, jc.planned_end_time)
+        delay_hrs = time_diff_in_hours(now, jc.expected_end_date)
         level     = _get_level(delay_hrs, warn_hrs, crit_hrs, stop_hrs)
         current   = jc.custom_escalation_status or ""
 
@@ -88,7 +88,7 @@ def _write_escalation_log(jc: dict, delay_hrs: float, level: str) -> None:
             "work_order":       jc.work_order,
             "operation":        jc.operation,
             "workstation":      jc.workstation,
-            "planned_end_time": jc.planned_end_time,
+            "expected_end_date": jc.expected_end_date,
             "delay_hrs":        round(delay_hrs, 2),
             "escalation_level": level,
             "notified_at":      now_datetime(),
@@ -130,7 +130,7 @@ def _send_alert(jc, delay_hrs, level, manager, supervisor, plant_head):
         <tr><th style="background:#f4f4f4;text-align:left">Station / Machine</th>
             <td>{jc.workstation}</td></tr>
         <tr><th style="background:#f4f4f4;text-align:left">Was Due</th>
-            <td>{jc.planned_end_time}</td></tr>
+            <td>{jc.expected_end_date}</td></tr>
         <tr><th style="background:#f4f4f4;text-align:left">Overdue By</th>
             <td style="color:red;font-weight:bold">{delay_hrs:.1f} hours</td></tr>
       </table>

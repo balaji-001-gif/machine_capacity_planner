@@ -37,7 +37,7 @@ def get_data(filters):
     open_jcs = frappe.get_list(
         "Job Card",
         filters={"status": ["in", ["Open", "Work In Progress"]]},
-        fields=["name", "work_order", "workstation", "planned_start_time", "planned_end_time"],
+        fields=["name", "work_order", "workstation", "expected_start_date", "expected_end_date"],
     )
 
     rows = []
@@ -52,7 +52,7 @@ def get_data(filters):
         item = frappe.db.get_value("Work Order", wo, "production_item")
 
         # machine free at = planned end of current last job on workstation
-        machine_free_at = jc.planned_end_time or now_datetime()
+        machine_free_at = jc.expected_end_date or now_datetime()
 
         mat = get_material_readiness(wo, machine_free_at, warehouse) if warehouse else _ready_result()
 

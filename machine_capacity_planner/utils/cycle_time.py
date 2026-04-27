@@ -39,7 +39,7 @@ def get_full_cycle_time(work_order: str) -> dict:
         filters={"work_order": work_order},
         fields=[
             "name", "operation", "workstation", "status",
-            "planned_start_time", "planned_end_time",
+            "expected_start_date", "expected_end_date",
             "time_in_mins", "sequence_id",
         ],
         order_by="sequence_id asc",
@@ -76,10 +76,10 @@ def get_full_cycle_time(work_order: str) -> dict:
         # Detect overdue
         if (
             jc.status in ("Open", "Work In Progress")
-            and jc.planned_end_time
-            and jc.planned_end_time < now
+            and jc.expected_end_date
+            and jc.expected_end_date < now
         ):
-            delay = time_diff_in_hours(now, jc.planned_end_time)
+            delay = time_diff_in_hours(now, jc.expected_end_date)
             overdue_ops.append({
                 "operation":   jc.operation,
                 "workstation": jc.workstation,

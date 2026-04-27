@@ -273,13 +273,13 @@ def _get_committed_hours(machine: str, start_dt, end_dt) -> float:
     """
     result = frappe.db.sql("""
         SELECT COALESCE(SUM(
-            TIMESTAMPDIFF(SECOND, planned_start_time, planned_end_time) / 3600
+            TIMESTAMPDIFF(SECOND, expected_start_date, expected_end_date) / 3600
         ), 0) AS booked_hrs
         FROM `tabJob Card`
         WHERE workstation        = %(machine)s
           AND status             IN ('Open', 'Work In Progress')
-          AND planned_start_time >= %(start)s
-          AND planned_end_time   <= %(end)s
+          AND expected_start_date >= %(start)s
+          AND expected_end_date   <= %(end)s
     """, {
         "machine": machine,
         "start":   start_dt,
@@ -292,15 +292,15 @@ def _get_committed_hours(machine: str, start_dt, end_dt) -> float:
 def _get_earliest_free_slot(machine: str, from_dt) -> float:
     """
     Returns hours from from_dt until the machine is next available.
-    Looks at the MAX planned_end_time of consecutive booked Job Cards.
+    Looks at the MAX expected_end_date of consecutive booked Job Cards.
     Returns 0.0 if machine is already free.
     """
     last_booked = frappe.db.sql("""
-        SELECT MAX(planned_end_time) AS last_end
+        SELECT MAX(expected_end_date) AS last_end
         FROM `tabJob Card`
         WHERE workstation        = %(machine)s
           AND status             IN ('Open', 'Work In Progress')
-          AND planned_start_time >= %(from_dt)s
+          AND expected_start_date >= %(from_dt)s
     """, {"machine": machine, "from_dt": from_dt}, as_dict=True)
 
     last_end = last_booked[0].get("last_end") if last_booked else None

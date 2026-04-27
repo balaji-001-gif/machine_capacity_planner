@@ -99,7 +99,7 @@ def _get_rebalanceable_job_cards():
         },
         fields=[
             "name", "operation", "workstation",
-            "work_order", "planned_start_time", "planned_end_time",
+            "work_order", "expected_start_date", "expected_end_date",
         ],
     )
 
