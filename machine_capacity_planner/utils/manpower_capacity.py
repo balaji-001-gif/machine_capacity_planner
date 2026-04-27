@@ -78,7 +78,7 @@ def get_all_manpower_station_loads() -> list:
     """
     stations = frappe.get_list(
         "Workstation",
-        filters={"custom_resource_type": "Manpower", "disabled": 0, "is_group": 0},
+        filters={"custom_resource_type": "Manpower",  "is_group": 0},
         fields=["name", "custom_operators_count", "total_working_hrs"],
     )
 

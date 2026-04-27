@@ -65,7 +65,7 @@ def get_all_groups_capacity(horizon_days: int = 1) -> list:
 
     groups = frappe.get_list(
         "Workstation",
-        filters={"is_group": 1, "disabled": 0},
+        filters={"is_group": 1, },
         fields=["name"],
     )
     return [get_group_capacity(g.name, horizon_days) for g in groups]

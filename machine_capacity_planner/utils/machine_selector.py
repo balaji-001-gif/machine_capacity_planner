@@ -239,7 +239,7 @@ def _get_candidate_machines(wc_group: str) -> List[Dict]:
         "Workstation",
         filters={
             "parent_workstation": wc_group,
-            "disabled":           0,
+            
             "is_group":           0,
         },
         fields=["name", "capacity_planning_factor", "description"],

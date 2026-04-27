@@ -37,7 +37,7 @@ def get_data(filters):
     days   = int((filters or {}).get("forecast_days", 7))
     groups = frappe.get_list(
         "Workstation",
-        filters={"is_group": 1, "disabled": 0},
+        filters={"is_group": 1, },
         fields=["name"],
     )
     rows = []

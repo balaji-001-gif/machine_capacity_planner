@@ -29,7 +29,7 @@ def get_data(filters):
 
     groups = frappe.get_list(
         "Workstation",
-        filters={"is_group": 1, "disabled": 0},
+        filters={"is_group": 1, },
         fields=["name"],
     )
     rows = []
