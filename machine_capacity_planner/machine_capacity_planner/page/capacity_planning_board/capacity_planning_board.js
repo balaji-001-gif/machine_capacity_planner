@@ -21,7 +21,7 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
     });
 
     // ── Toolbar controls ──────────────────────────────────────────────────
-    page.add_button(__("Refresh"), () => refresh_dashboard(), { icon: "refresh" });
+    page.add_button(__("Refresh"), () => refresh_dashboard(true), { icon: "refresh" });
 
     page.add_button(__("Trigger Rebalance"), () => {
         frappe.confirm(
@@ -35,7 +35,7 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
         fieldtype: "Int",
         fieldname: "horizon_days",
         default:   1,
-        change()   { refresh_dashboard(); },
+        change()   { refresh_dashboard(true); },
     });
 
     // ── Main container ────────────────────────────────────────────────────
@@ -47,20 +47,28 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
     `).appendTo(page.main);
 
     // ── Data loading ──────────────────────────────────────────────────────
-    async function refresh_dashboard() {
+    async function refresh_dashboard(is_manual = false) {
+        // Prevent rogue background refreshing if user navigated away
+        if (!is_manual && frappe.get_route()[0] !== "capacity_planning_board") return;
+
         const horizon = horizon_field.get_value() || 1;
-        frappe.show_progress("Loading capacity data...", 30, 100);
+        
+        if (is_manual) {
+            frappe.show_progress("Loading capacity data...", 30, 100);
+        }
 
         try {
             const r = await frappe.call({
                 method: "machine_capacity_planner.api.capacity.get_all_groups_capacity",
                 args:   { horizon_days: horizon },
             });
-            frappe.hide_progress();
+            if (is_manual) frappe.hide_progress();
             render_board(r.message || []);
         } catch (e) {
-            frappe.hide_progress();
-            frappe.msgprint({ message: "Failed to load capacity data.", indicator: "red" });
+            if (is_manual) {
+                frappe.hide_progress();
+                frappe.msgprint({ message: "Failed to load capacity data.", indicator: "red" });
+            }
         }
     }
 
@@ -192,7 +200,7 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
                 message:   r.message?.message || "Rebalancing done.",
                 indicator: "green",
             });
-            refresh_dashboard();
+            refresh_dashboard(true);
         } catch (e) {
             frappe.hide_progress();
             frappe.msgprint({ message: "Rebalance failed. Check error log.", indicator: "red" });
@@ -200,6 +208,6 @@ frappe.pages["capacity_planning_board"].on_page_load = function (wrapper) {
     }
 
     // ── Init ──────────────────────────────────────────────────────────────
-    refresh_dashboard();
-    setInterval(refresh_dashboard, 60_000);   // auto-refresh every 60 seconds
+    refresh_dashboard(true);
+    setInterval(() => refresh_dashboard(false), 60_000);   // silent auto-refresh every 60s
 };
