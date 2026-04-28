@@ -314,21 +314,10 @@ def _has_maintenance_in_horizon(machine: str, start_dt, end_dt) -> int:
     """
     Returns 1 if a submitted Maintenance Schedule Detail exists for this
     machine (matched by asset_name) within the planning horizon.
+    Note: Disabled temporarily because standard ERPNext v15 Workstations do 
+    not have a native Maintenance Schedule mapping by default.
     """
-    count = frappe.db.sql("""
-        SELECT COUNT(*) AS cnt
-        FROM   `tabMaintenance Schedule Detail` msd
-        JOIN   `tabMaintenance Schedule` ms ON ms.name = msd.parent
-        WHERE  ms.asset_name      = %(machine)s
-          AND  msd.scheduled_date BETWEEN %(start)s AND %(end)s
-          AND  ms.docstatus       = 1
-    """, {
-        "machine": machine,
-        "start":   start_dt,
-        "end":     end_dt,
-    }, as_dict=True)
-
-    return 1 if (count and count[0].get("cnt", 0) > 0) else 0
+    return 0
 
 
 def _count_holidays(holiday_list: str, start_dt, end_dt) -> int:
