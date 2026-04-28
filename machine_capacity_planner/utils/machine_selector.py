@@ -249,16 +249,16 @@ def _get_candidate_machines(wc_group: str) -> List[Dict]:
 def _get_gross_available_hours(machine: str, start_dt, end_dt) -> float:
     """
     Calculate total available shift hours for the machine in the date range.
-    Uses the Workstation's total_working_hrs field and subtracts holiday days.
+    Uses the Workstation's total_working_hours field and subtracts holiday days.
     """
     horizon_days = max(time_diff_in_hours(end_dt, start_dt) / 24, 1)
 
     wc = frappe.db.get_value(
         "Workstation", machine,
-        ["total_working_hrs", "holiday_list"],
+        ["total_working_hours", "holiday_list"],
         as_dict=True,
     )
-    daily_hrs = float(wc.get("total_working_hrs") or 8)
+    daily_hrs = float(wc.get("total_working_hours") or 8)
 
     holiday_days = _count_holidays(wc.get("holiday_list"), start_dt, end_dt)
     working_days = max(horizon_days - holiday_days, 0)

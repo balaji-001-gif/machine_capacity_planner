@@ -26,7 +26,7 @@ def get_manpower_capacity(work_centre: str, start_dt, delivery_deadline) -> dict
             frappe.db.get_value("Workstation", work_centre, "custom_operators_count") or 1
         )
         shift_hrs = float(
-            frappe.db.get_value("Workstation", work_centre, "total_working_hrs") or 8
+            frappe.db.get_value("Workstation", work_centre, "total_working_hours") or 8
         )
     except Exception:
         operators = 1.0
@@ -79,7 +79,7 @@ def get_all_manpower_station_loads() -> list:
     stations = frappe.get_list(
         "Workstation",
         filters={"custom_resource_type": "Manpower",  "is_group": 0},
-        fields=["name", "custom_operators_count", "total_working_hrs"],
+        fields=["name", "custom_operators_count", "total_working_hours"],
     )
 
     results = []
