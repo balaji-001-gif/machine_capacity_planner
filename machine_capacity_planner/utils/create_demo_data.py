@@ -5,17 +5,31 @@ def create_all():
 
     # 1. Configure Machine Selection Settings
     try:
-        settings = frappe.get_doc("Machine Selection Settings")
-        settings.utilisation_weight = 25
-        settings.earliest_free_slot_weight = 25
-        settings.delivery_slack_weight = 20
-        settings.maintenance_risk_weight = 10
-        settings.material_readiness_weight = 20
-        settings.enable_mrp_material_check = 1
-        settings.warning_threshold_hrs = 0
-        settings.critical_threshold_hrs = 4
-        settings.stopped_threshold_hrs = 8
-        settings.save()
+        # For Single DocTypes, we must use frappe.db.set_value directly
+        # to bypass module-lookup issues during first-time initialization.
+        fields = {
+            "weight_load": 25,
+            "weight_earliest_slot": 25,
+            "weight_delivery_slack": 20,
+            "weight_maintenance_risk": 10,
+            "weight_material_readiness": 20,
+            "enable_mrp_material_check": 1,
+            "warning_threshold_hrs": 0,
+            "critical_threshold_hrs": 4,
+            "stopped_threshold_hrs": 8,
+        }
+
+        # Ensure the single record row exists in the DB first
+        if not frappe.db.exists("Machine Selection Settings", "Machine Selection Settings"):
+            frappe.db.sql("""
+                INSERT IGNORE INTO `tabMachine Selection Settings`
+                (name, creation, modified, docstatus, modified_by, owner)
+                VALUES ('Machine Selection Settings', NOW(), NOW(), 0, 'Administrator', 'Administrator')
+            """)
+            frappe.db.commit()
+
+        for field, val in fields.items():
+            frappe.db.set_value("Machine Selection Settings", "Machine Selection Settings", field, val)
         frappe.db.commit()
         print("✓ Configured Machine Selection Settings.")
     except Exception as e:
