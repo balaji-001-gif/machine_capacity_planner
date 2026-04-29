@@ -107,10 +107,20 @@ def get_material_readiness(work_order: str, machine_free_at, warehouse: str) -> 
 
 
 def _get_required_items(work_order: str) -> list:
-    """Read from Production Plan (preferred) or BOM (fallback)."""
+    """Read from Work Order Item (preferred), then Production Plan, then BOM."""
+    # 1. Try Work Order Item child table
+    wo_items = frappe.get_all(
+        "Work Order Item",
+        filters={"parent": work_order},
+        fields=["item_code", "required_qty", "stock_uom"]
+    )
+    if wo_items:
+        return wo_items
+
+    # 2. Fallback to Production Plan
     pp_name = frappe.db.get_value("Work Order", work_order, "production_plan")
     if pp_name:
-        items = frappe.get_list(
+        items = frappe.get_all(
             "Production Plan Item",
             filters={"parent": pp_name},
             fields=["item_code", "qty as required_qty", "stock_uom"],
@@ -118,19 +128,20 @@ def _get_required_items(work_order: str) -> list:
         if items:
             return items
 
+    # 3. Fallback to BOM
     bom_no = frappe.db.get_value("Work Order", work_order, "bom_no")
     qty    = frappe.db.get_value("Work Order", work_order, "qty") or 1
     if not bom_no:
         return []
 
-    bom_items = frappe.get_list(
+    bom_items = frappe.get_all(
         "BOM Item",
         filters={"parent": bom_no},
         fields=["item_code", "qty", "stock_uom"],
     )
     return [
-        {"item_code": i["item_code"], "required_qty": float(i["qty"] or 0) * float(qty)}
-        for i in bom_items
+        {"item_code": i.get("item_code"), "required_qty": float(i.get("qty") or 0) * float(qty)}
+        for i in bom_items if i.get("item_code")
     ]
 
 
