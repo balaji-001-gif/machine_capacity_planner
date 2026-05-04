@@ -1,6 +1,9 @@
 {
   "name": "machine_capacity_planner",
   "version": "1.0.0",
-  "scripts": {},
+  "scripts": {
+    "build": "echo 'No assets to build'",
+    "production": "echo 'No assets to build'"
+  },
   "private": true
 }
