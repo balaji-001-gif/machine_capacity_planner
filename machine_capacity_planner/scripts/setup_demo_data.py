@@ -137,10 +137,12 @@ def _create_bom(item_code, raw_mat, company):
 def _create_work_order(item_code, company):
     # Dynamically find valid warehouses
     warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+    bom_no = frappe.db.get_value("BOM", {"item": item_code, "is_active": 1, "is_default": 1}, "name")
     
     wo = frappe.get_doc({
         "doctype": "Work Order",
-        "item_code": item_code,
+        "production_item": item_code,
+        "bom_no": bom_no,
         "qty": 10,
         "company": company,
         "wip_warehouse": warehouse,
