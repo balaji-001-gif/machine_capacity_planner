@@ -99,17 +99,19 @@ def _configure_settings():
 
 def _create_item(item_code, item_name, company, is_stock=1):
     if not frappe.db.exists("Item", item_code):
+        # Dynamically find a valid Item Group
+        item_group = frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "All Item Groups"
+        
         item = frappe.get_doc({
             "doctype": "Item",
             "item_code": item_code,
             "item_name": item_name,
-            "item_group": "Products" if item_code.startswith("DEMO-SHAFT") else "Raw Materials",
+            "item_group": item_group,
             "is_stock_item": is_stock,
-            "stock_uom": "Nos",
-            "opening_stock": 0
+            "stock_uom": "Nos"
         })
         item.insert(ignore_permissions=True)
-        print(f"  ✅ Created Item: {item_code}")
+        print(f"  ✅ Created Item: {item_code} (Group: {item_group})")
 
 def _create_bom(item_code, raw_mat, company):
     if not frappe.db.exists("BOM", {"item": item_code}):
@@ -133,21 +135,17 @@ def _create_bom(item_code, raw_mat, company):
         print(f"  ✅ Created BOM for {item_code}")
 
 def _create_work_order(item_code, company):
+    # Dynamically find valid warehouses
+    warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+    
     wo = frappe.get_doc({
         "doctype": "Work Order",
         "item_code": item_code,
         "qty": 10,
         "company": company,
-        "wip_warehouse": "Work In Progress - PA",
-        "fg_warehouse": "Finished Goods - PA",
+        "wip_warehouse": warehouse,
+        "fg_warehouse": warehouse,
         "planned_start_date": nowdate()
     })
-    # Set default warehouses if they don't exist
-    if not frappe.db.exists("Warehouse", wo.wip_warehouse):
-        wo.wip_warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
-    if not frappe.db.exists("Warehouse", wo.fg_warehouse):
-        wo.fg_warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
-        
     wo.insert(ignore_permissions=True)
-    # wo.submit() # Submission triggers the machine selection logic if hooks are active
-    print(f"  ✅ Created Work Order: {wo.name}")
+    print(f"  ✅ Created Work Order: {wo.name} (Warehouse: {warehouse})")
