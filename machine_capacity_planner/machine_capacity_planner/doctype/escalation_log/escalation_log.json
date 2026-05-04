@@ -1,0 +1,26 @@
+{
+  "name": "Escalation Log",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_single": 0,
+  "is_submittable": 0,
+  "read_only": 1,
+  "description": "Audit log for every Job Card overdue escalation alert fired.",
+  "fields": [
+    {"fieldname": "job_card",         "fieldtype": "Link",     "options": "Job Card",   "label": "Job Card",          "reqd": 1, "in_list_view": 1},
+    {"fieldname": "work_order",       "fieldtype": "Link",     "options": "Work Order", "label": "Work Order",         "reqd": 1, "in_list_view": 1},
+    {"fieldname": "operation",        "fieldtype": "Data",                              "label": "Operation",          "in_list_view": 1},
+    {"fieldname": "workstation",      "fieldtype": "Link",     "options": "Workstation","label": "Station / Machine",  "in_list_view": 1},
+    {"fieldname": "expected_end_date", "fieldtype": "Datetime",                          "label": "Was Due"},
+    {"fieldname": "delay_hrs",        "fieldtype": "Float",                             "label": "Delay (hrs)",        "in_list_view": 1},
+    {"fieldname": "escalation_level", "fieldtype": "Select",   "options": "Warning\nCritical\nStopped", "label": "Level", "in_list_view": 1},
+    {"fieldname": "notified_at",      "fieldtype": "Datetime",                          "label": "Notified At"},
+    {"fieldname": "resolved_at",      "fieldtype": "Datetime",                          "label": "Resolved At"},
+    {"fieldname": "resolution_note",  "fieldtype": "Text",                              "label": "Resolution Notes"}
+  ],
+  "permissions": [
+    {"role": "Manufacturing Manager", "read": 1, "write": 1},
+    {"role": "Manufacturing User",    "read": 1},
+    {"role": "System Manager",        "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

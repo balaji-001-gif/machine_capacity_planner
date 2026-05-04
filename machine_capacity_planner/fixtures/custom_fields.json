@@ -7,8 +7,9 @@
     "label": "Machine Score",
     "insert_after": "workstation",
     "read_only": 1,
-    "description": "Composite score at time of assignment (lower = better fit)",
-    "module": "Machine Capacity Planner"
+    "description": "Composite score at time of assignment (lower = better)",
+    "module": "Machine Capacity Planner",
+    "name": "Job Card-custom_machine_score"
   },
   {
     "doctype": "Custom Field",
@@ -19,16 +20,105 @@
     "insert_after": "custom_machine_score",
     "read_only": 1,
     "description": "AUTO, AUTO-REBALANCE, or MANUAL:username",
-    "module": "Machine Capacity Planner"
+    "module": "Machine Capacity Planner",
+    "name": "Job Card-custom_allocated_by"
   },
   {
     "doctype": "Custom Field",
-    "dt": "Work Centre",
+    "dt": "Job Card",
+    "fieldname": "custom_material_status",
+    "fieldtype": "Select",
+    "label": "Material Status",
+    "options": "Ready\nPartial\nBlocked",
+    "insert_after": "custom_allocated_by",
+    "read_only": 1,
+    "description": "MRP material readiness at time of machine assignment",
+    "module": "Machine Capacity Planner",
+    "name": "Job Card-custom_material_status"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Job Card",
+    "fieldname": "custom_material_delay_hrs",
+    "fieldtype": "Float",
+    "label": "Material Delay (hrs)",
+    "insert_after": "custom_material_status",
+    "read_only": 1,
+    "description": "Hours machine must wait for materials (0 = no delay)",
+    "module": "Machine Capacity Planner",
+    "name": "Job Card-custom_material_delay_hrs"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Job Card",
+    "fieldname": "custom_escalation_status",
+    "fieldtype": "Select",
+    "label": "Escalation Status",
+    "options": "\nWarning\nCritical\nStopped",
+    "insert_after": "custom_material_delay_hrs",
+    "read_only": 1,
+    "description": "Set automatically when Job Card is overdue",
+    "module": "Machine Capacity Planner",
+    "name": "Job Card-custom_escalation_status"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "custom_resource_type",
+    "fieldtype": "Select",
+    "label": "Resource Type",
+    "options": "Machine\nManpower\nExternal",
+    "default": "Machine",
+    "insert_after": "description",
+    "description": "Machine=CNC/CMM | Manpower=Stores/Quality | External=Subcon",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-custom_resource_type"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "custom_operators_count",
+    "fieldtype": "Int",
+    "label": "Number of Operators",
+    "default": "1",
+    "insert_after": "custom_resource_type",
+    "description": "Man-hour capacity = shift_hrs x operators_count (Manpower type only)",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-custom_operators_count"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
     "fieldname": "custom_machine_group_tag",
     "fieldtype": "Data",
     "label": "Machine Group Tag",
-    "insert_after": "description",
+    "insert_after": "custom_operators_count",
     "description": "Tag for capability filtering (e.g. CNC-TURN, LASER-CUT)",
-    "module": "Machine Capacity Planner"
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-custom_machine_group_tag"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "is_group",
+    "fieldtype": "Check",
+    "label": "Is Group",
+    "default": "0",
+    "insert_after": "workstation_name",
+    "description": "Check if this is a parent group (e.g. CNC-GROUP). Groups cannot have jobs assigned to them directly.",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-is_group"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Workstation",
+    "fieldname": "parent_workstation",
+    "fieldtype": "Link",
+    "options": "Workstation",
+    "label": "Parent Workstation",
+    "insert_after": "is_group",
+    "description": "Select the group this machine belongs to.",
+    "module": "Machine Capacity Planner",
+    "name": "Workstation-parent_workstation"
   }
 ]

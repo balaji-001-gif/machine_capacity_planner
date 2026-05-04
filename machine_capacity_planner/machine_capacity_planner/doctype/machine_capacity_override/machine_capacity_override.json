@@ -1,0 +1,83 @@
+{
+  "name": "Machine Capacity Override",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_submittable": 0,
+  "description": "Manual override: assigns a specific machine instead of the auto-selected one.",
+  "fields": [
+    {
+      "fieldname": "job_card",
+      "fieldtype": "Link",
+      "options": "Job Card",
+      "label": "Job Card",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "options": "Work Order",
+      "label": "Work Order",
+      "fetch_from": "job_card.work_order",
+      "read_only": 1
+    },
+    {
+      "fieldname": "operation",
+      "fieldtype": "Data",
+      "label": "Operation",
+      "fetch_from": "job_card.operation",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "auto_machine",
+      "fieldtype": "Link",
+      "options": "Workstation",
+      "label": "Auto-Assigned Machine",
+      "read_only": 1
+    },
+    {
+      "fieldname": "override_machine",
+      "fieldtype": "Link",
+      "options": "Workstation",
+      "label": "Override To Machine",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Select",
+      "label": "Reason",
+      "reqd": 1,
+      "options": "Machine Breakdown\nSpecial Tooling Required\nOperator Preference\nCapacity Emergency\nQuality Issue\nOther"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Text",
+      "label": "Additional Notes"
+    },
+    {
+      "fieldname": "overridden_by",
+      "fieldtype": "Link",
+      "options": "User",
+      "label": "Overridden By",
+      "default": "__user",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Manufacturing Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ]
+}

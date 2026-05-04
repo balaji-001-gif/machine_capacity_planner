@@ -1,7 +1,7 @@
 """
 work_centre.py
 ==============
-Invalidates the capacity cache whenever a Work Centre is updated.
+Invalidates the capacity cache whenever a Workstation is updated.
 This ensures the next scoring run reads fresh data.
 """
 import frappe

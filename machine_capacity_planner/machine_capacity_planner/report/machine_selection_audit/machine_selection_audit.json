@@ -1,0 +1,23 @@
+{
+  "name": "Machine Selection Audit",
+  "doctype": "Report",
+  "report_type": "Script Report",
+  "module": "Machine Capacity Planner",
+  "ref_doctype": "Machine Selection Log",
+  "is_standard": "Yes",
+  "description": "Full audit trail of why each Job Card was assigned to its machine.",
+  "filters": [
+    {
+      "fieldname": "from_date",
+      "label": "From Date",
+      "fieldtype": "Date",
+      "default": "Today"
+    },
+    {
+      "fieldname": "machine",
+      "label": "Machine",
+      "fieldtype": "Link",
+      "options": "Workstation"
+    }
+  ]
+}

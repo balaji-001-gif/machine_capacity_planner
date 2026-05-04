@@ -1,0 +1,25 @@
+{
+  "name": "MRP Run Log",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_single": 0,
+  "is_submittable": 0,
+  "read_only": 1,
+  "description": "Audit log for every MRP material readiness check run.",
+  "fields": [
+    {"fieldname": "work_order",         "fieldtype": "Link",     "options": "Work Order",  "label": "Work Order",          "reqd": 1, "in_list_view": 1},
+    {"fieldname": "run_date",           "fieldtype": "Datetime", "label": "Run Date",      "reqd": 1, "in_list_view": 1},
+    {"fieldname": "status",             "fieldtype": "Select",   "label": "Status",        "options": "Ready\nPartial\nBlocked", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "total_items",        "fieldtype": "Int",      "label": "Total Items"},
+    {"fieldname": "available_items",    "fieldtype": "Int",      "label": "Available Items"},
+    {"fieldname": "shortfall_items",    "fieldtype": "Int",      "label": "Shortfall Items"},
+    {"fieldname": "expected_readiness", "fieldtype": "Datetime", "label": "Expected Material Readiness"},
+    {"fieldname": "machine_assigned",   "fieldtype": "Link",     "options": "Workstation", "label": "Machine Assigned",    "in_list_view": 1},
+    {"fieldname": "material_delay_hrs", "fieldtype": "Float",    "label": "Material Delay (hrs)"}
+  ],
+  "permissions": [
+    {"role": "Manufacturing Manager", "read": 1, "write": 0},
+    {"role": "Manufacturing User",    "read": 1, "write": 0},
+    {"role": "System Manager",        "read": 1, "write": 1, "create": 1, "delete": 1}
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "name": "Machine Selection Log",
+  "doctype": "DocType",
+  "module": "Machine Capacity Planner",
+  "is_submittable": 0,
+  "is_single": 0,
+  "track_changes": 0,
+  "read_only": 1,
+  "description": "Audit trail for every automatic machine assignment decision.",
+  "fields": [
+    {
+      "fieldname": "operation",
+      "fieldtype": "Link",
+      "options": "Operation",
+      "label": "Operation",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "selected_machine",
+      "fieldtype": "Link",
+      "options": "Workstation",
+      "label": "Selected Machine",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "score",
+      "fieldtype": "Float",
+      "label": "Score",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "utilisation_pct",
+      "fieldtype": "Float",
+      "label": "Utilisation %"
+    },
+    {
+      "fieldname": "free_hours",
+      "fieldtype": "Float",
+      "label": "Free Hours"
+    },
+    {
+      "fieldname": "horizon_hours",
+      "fieldtype": "Float",
+      "label": "Horizon Hours"
+    },
+    {
+      "fieldname": "delivery_deadline",
+      "fieldtype": "Datetime",
+      "label": "Delivery Deadline"
+    },
+    {
+      "fieldname": "required_hours",
+      "fieldtype": "Float",
+      "label": "Required Hours"
+    },
+    {
+      "fieldname": "runner_up_machine",
+      "fieldtype": "Link",
+      "options": "Workstation",
+      "label": "Runner-Up Machine"
+    },
+    {
+      "fieldname": "runner_up_score",
+      "fieldtype": "Float",
+      "label": "Runner-Up Score"
+    },
+    {
+      "fieldname": "all_scores",
+      "fieldtype": "Text",
+      "label": "All Scores (JSON)"
+    },
+    {
+      "fieldname": "allocated_by",
+      "fieldtype": "Data",
+      "label": "Allocated By",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "override_by",
+      "fieldtype": "Link",
+      "options": "User",
+      "label": "Override By"
+    },
+    {
+      "fieldname": "override_reason",
+      "fieldtype": "Text",
+      "label": "Override Reason"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Manufacturing Manager",
+      "read": 1,
+      "write": 0
+    },
+    {
+      "role": "Manufacturing User",
+      "read": 1,
+      "write": 0
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ]
+}

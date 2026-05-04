@@ -18,7 +18,7 @@ from machine_capacity_planner.utils.machine_selector import (
 @frappe.whitelist()
 def get_group_capacity(wc_group: str, horizon_days: int = 1) -> dict:
     """
-    Return capacity metrics for all machines in a Work Centre Group.
+    Return capacity metrics for all machines in a Workstation Group.
 
     GET /api/method/machine_capacity_planner.api.capacity.get_group_capacity
         ?wc_group=CNC-GROUP&horizon_days=2
@@ -33,7 +33,7 @@ def get_group_capacity(wc_group: str, horizon_days: int = 1) -> dict:
       "summary": { "avg_utilisation": 65.2, "total_free_hrs": 9.0, "machine_count": 3 }
     }
     """
-    frappe.has_permission("Work Centre", throw=True)
+    frappe.has_permission("Workstation", throw=True)
 
     machines  = _get_candidate_machines(wc_group)
     start_dt  = now_datetime()
@@ -60,12 +60,12 @@ def get_group_capacity(wc_group: str, horizon_days: int = 1) -> dict:
 
 @frappe.whitelist()
 def get_all_groups_capacity(horizon_days: int = 1) -> list:
-    """Return capacity for ALL Work Centre Groups in one call."""
-    frappe.has_permission("Work Centre", throw=True)
+    """Return capacity for ALL Workstation Groups in one call."""
+    frappe.has_permission("Workstation", throw=True)
 
     groups = frappe.get_list(
-        "Work Centre",
-        filters={"is_group": 1, "disabled": 0},
+        "Workstation",
+        filters={"is_group": 1, },
         fields=["name"],
     )
     return [get_group_capacity(g.name, horizon_days) for g in groups]
@@ -84,10 +84,10 @@ def get_job_card_queue(workstation: str) -> list:
         },
         fields=[
             "name", "operation", "work_order", "for_quantity",
-            "planned_start_time", "planned_end_time",
+            "expected_start_date", "expected_end_date",
             "status", "custom_machine_score",
         ],
-        order_by="planned_start_time asc",
+        order_by="expected_start_date asc",
     )
 
 

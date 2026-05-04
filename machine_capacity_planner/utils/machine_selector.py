@@ -35,6 +35,12 @@ from frappe.utils import (
 from machine_capacity_planner.utils.logger import mcp_logger
 
 
+# Lazy import to avoid circular dependency
+def _get_manpower_capacity(work_centre, start_dt, delivery_deadline):
+    from machine_capacity_planner.utils.manpower_capacity import get_manpower_capacity
+    return get_manpower_capacity(work_centre, start_dt, delivery_deadline)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC API — call these from outside this module
 # ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +50,7 @@ def select_best_machine(
     start_dt,
     delivery_deadline,
     required_hours: float = 1.0,
+    work_order: str = None,
 ) -> Optional[Dict]:
     """
     Entry point: score all candidate machines and return the winner.
@@ -62,7 +69,7 @@ def select_best_machine(
     """
     settings = _get_settings()
 
-    # 1. Resolve the Work Centre Group for this operation
+    # 1. Resolve the Workstation Group for this operation
     wc_group = frappe.db.get_value("Operation", operation, "workstation")
     if not wc_group:
         mcp_logger.warning(
@@ -70,24 +77,55 @@ def select_best_machine(
         )
         return None
 
-    # 2. Fetch all active child machines in the group
+    # 2. Fetch all active child machines/stations in the group
     candidates = _get_candidate_machines(wc_group)
     if not candidates:
-        mcp_logger.warning(
-            f"[MCP] No active machines found in group '{wc_group}'"
-        )
+        mcp_logger.warning(f"[MCP] No active resources found in group '{wc_group}'")
         return None
 
-    # 3. Score each candidate
+    # Determine resource type of the group
+    resource_type = frappe.db.get_value(
+        "Workstation", wc_group, "custom_resource_type"
+    ) or "Machine"
+
+    # Skip External (Subcontracting) — handled by ERPNext Subcon module
+    if resource_type == "External":
+        mcp_logger.info(f"[MCP] Skipping External op '{operation}' — subcontracting")
+        return None
+
+    # 3. Score each candidate (machine or manpower, with MRP for machine ops)
+    enable_mrp = settings.get("enable_mrp_check", True)
+    warehouse  = settings.get("material_check_warehouse", "")
+
     scored = []
-    for machine in candidates:
-        cap   = get_machine_capacity(machine["name"], start_dt, delivery_deadline)
+    for resource in candidates:
+        if resource_type == "Manpower":
+            cap = _get_manpower_capacity(resource["name"], start_dt, delivery_deadline)
+            # Manpower ops skip MRP — materials handled before or after by stores
+            cap["material_delay_hrs"] = 0.0
+            cap["material_status"]    = "Ready"
+        else:
+            cap = get_machine_capacity(resource["name"], start_dt, delivery_deadline)
+            # F5: MRP — material delay relative to THIS machine's free slot
+            material_delay_hrs = 0.0
+            material_status    = "Ready"
+            if enable_mrp and work_order and warehouse:
+                from machine_capacity_planner.utils.mrp_checker import get_material_readiness
+                from frappe.utils import add_to_date
+                machine_free_at    = add_to_date(start_dt, hours=cap["earliest_free"])
+                mat                = get_material_readiness(work_order, machine_free_at, warehouse)
+                material_delay_hrs = mat["material_delay_hrs"]
+                material_status    = mat["status"]
+            cap["material_delay_hrs"] = material_delay_hrs
+            cap["material_status"]    = material_status
+
         score = _calculate_score(cap, settings)
-        scored.append({**machine, **cap, "score": score})
+        scored.append({**resource, **cap, "score": score, "resource_type": resource_type})
         mcp_logger.debug(
-            f"[MCP] {machine['name']} → "
-            f"load={cap['utilisation']:.1f}% "
+            f"[MCP] {resource['name']} ({resource_type}) → "
+            f"util={cap['utilisation']:.1f}% "
             f"free={cap['free_hrs']:.1f}h "
+            f"mat={cap.get('material_status','N/A')}(+{cap.get('material_delay_hrs',0):.1f}h) "
             f"score={score}"
         )
 
@@ -168,31 +206,40 @@ def _get_settings() -> dict:
     try:
         s = frappe.get_single("Machine Selection Settings")
         return {
-            "w_load":                 s.weight_load or 30,
-            "w_free":                 s.weight_free_slot or 35,
-            "w_slack":                s.weight_delivery_slack or 25,
-            "w_maint":                s.weight_maintenance_risk or 10,
-            "overload_threshold_pct": s.overload_threshold_pct or 92,
-            "rebalance_threshold":    s.rebalance_threshold or 10,
-            "manager_email":          s.manager_email or "",
+            "w_load":                    s.weight_load or 25,
+            "w_free":                    s.weight_free_slot or 25,
+            "w_slack":                   s.weight_delivery_slack or 20,
+            "w_maint":                   s.weight_maintenance_risk or 10,
+            "w_material":                s.weight_material_readiness or 20,
+            "overload_threshold_pct":    s.overload_threshold_pct or 92,
+            "rebalance_threshold":       s.rebalance_threshold or 10,
+            "manager_email":             s.manager_email or "",
+            "supervisor_email":          s.supervisor_email or "",
+            "plant_head_email":          s.plant_head_email or "",
+            "enable_mrp_check":          bool(s.enable_mrp_check if s.enable_mrp_check is not None else 1),
+            "material_check_warehouse":  s.material_check_warehouse or "",
+            "escalation_warning_hrs":    float(s.escalation_warning_hrs or 0),
+            "escalation_critical_hrs":   float(s.escalation_critical_hrs or 4),
+            "escalation_stopped_hrs":    float(s.escalation_stopped_hrs or 8),
         }
     except Exception:
-        # Return safe defaults if settings doc not yet created
         return {
-            "w_load": 30, "w_free": 35, "w_slack": 25, "w_maint": 10,
+            "w_load": 25, "w_free": 25, "w_slack": 20, "w_maint": 10, "w_material": 20,
             "overload_threshold_pct": 92,
             "rebalance_threshold": 10,
-            "manager_email": "",
+            "manager_email": "", "supervisor_email": "", "plant_head_email": "",
+            "enable_mrp_check": True, "material_check_warehouse": "",
+            "escalation_warning_hrs": 0, "escalation_critical_hrs": 4, "escalation_stopped_hrs": 8,
         }
 
 
 def _get_candidate_machines(wc_group: str) -> List[Dict]:
-    """Return all enabled, non-group Work Centres that are children of wc_group."""
+    """Return all enabled, non-group Workstations that are children of wc_group."""
     return frappe.get_list(
-        "Work Centre",
+        "Workstation",
         filters={
-            "parent_work_centre": wc_group,
-            "disabled":           0,
+            "parent_workstation": wc_group,
+            
             "is_group":           0,
         },
         fields=["name", "capacity_planning_factor", "description"],
@@ -202,16 +249,16 @@ def _get_candidate_machines(wc_group: str) -> List[Dict]:
 def _get_gross_available_hours(machine: str, start_dt, end_dt) -> float:
     """
     Calculate total available shift hours for the machine in the date range.
-    Uses the Work Centre's total_working_hrs field and subtracts holiday days.
+    Uses the Workstation's total_working_hours field and subtracts holiday days.
     """
     horizon_days = max(time_diff_in_hours(end_dt, start_dt) / 24, 1)
 
     wc = frappe.db.get_value(
-        "Work Centre", machine,
-        ["total_working_hrs", "holiday_list"],
+        "Workstation", machine,
+        ["total_working_hours", "holiday_list"],
         as_dict=True,
     )
-    daily_hrs = float(wc.get("total_working_hrs") or 8)
+    daily_hrs = float(wc.get("total_working_hours") or 8)
 
     holiday_days = _count_holidays(wc.get("holiday_list"), start_dt, end_dt)
     working_days = max(horizon_days - holiday_days, 0)
@@ -226,13 +273,13 @@ def _get_committed_hours(machine: str, start_dt, end_dt) -> float:
     """
     result = frappe.db.sql("""
         SELECT COALESCE(SUM(
-            TIMESTAMPDIFF(SECOND, planned_start_time, planned_end_time) / 3600
+            TIMESTAMPDIFF(SECOND, expected_start_date, expected_end_date) / 3600
         ), 0) AS booked_hrs
         FROM `tabJob Card`
         WHERE workstation        = %(machine)s
           AND status             IN ('Open', 'Work In Progress')
-          AND planned_start_time >= %(start)s
-          AND planned_end_time   <= %(end)s
+          AND expected_start_date >= %(start)s
+          AND expected_end_date   <= %(end)s
     """, {
         "machine": machine,
         "start":   start_dt,
@@ -245,15 +292,15 @@ def _get_committed_hours(machine: str, start_dt, end_dt) -> float:
 def _get_earliest_free_slot(machine: str, from_dt) -> float:
     """
     Returns hours from from_dt until the machine is next available.
-    Looks at the MAX planned_end_time of consecutive booked Job Cards.
+    Looks at the MAX expected_end_date of consecutive booked Job Cards.
     Returns 0.0 if machine is already free.
     """
     last_booked = frappe.db.sql("""
-        SELECT MAX(planned_end_time) AS last_end
+        SELECT MAX(expected_end_date) AS last_end
         FROM `tabJob Card`
         WHERE workstation        = %(machine)s
           AND status             IN ('Open', 'Work In Progress')
-          AND planned_start_time >= %(from_dt)s
+          AND expected_start_date >= %(from_dt)s
     """, {"machine": machine, "from_dt": from_dt}, as_dict=True)
 
     last_end = last_booked[0].get("last_end") if last_booked else None
@@ -267,21 +314,10 @@ def _has_maintenance_in_horizon(machine: str, start_dt, end_dt) -> int:
     """
     Returns 1 if a submitted Maintenance Schedule Detail exists for this
     machine (matched by asset_name) within the planning horizon.
+    Note: Disabled temporarily because standard ERPNext v15 Workstations do 
+    not have a native Maintenance Schedule mapping by default.
     """
-    count = frappe.db.sql("""
-        SELECT COUNT(*) AS cnt
-        FROM   `tabMaintenance Schedule Detail` msd
-        JOIN   `tabMaintenance Schedule` ms ON ms.name = msd.parent
-        WHERE  ms.asset_name      = %(machine)s
-          AND  msd.scheduled_date BETWEEN %(start)s AND %(end)s
-          AND  ms.docstatus       = 1
-    """, {
-        "machine": machine,
-        "start":   start_dt,
-        "end":     end_dt,
-    }, as_dict=True)
-
-    return 1 if (count and count[0].get("cnt", 0) > 0) else 0
+    return 0
 
 
 def _count_holidays(holiday_list: str, start_dt, end_dt) -> int:
@@ -306,10 +342,11 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     """
     Compute the composite weighted score. LOWER = BETTER.
 
-    F1  Utilisation penalty   — busy machine loses
-    F2  Free-slot delay       — machine free later loses
+    F1  Utilisation penalty   — busy machine/station loses
+    F2  Free-slot delay       — resource free later loses
     F3  Delivery slack        — less buffer before deadline loses
-    F4  Maintenance risk      — maintenance window loses
+    F4  Maintenance risk      — maintenance window loses (machines only)
+    F5  Material readiness    — machine must wait for materials loses (machines only)
     """
     horizon = cap["horizon_hrs"] or 1.0
 
@@ -322,10 +359,15 @@ def _calculate_score(cap: dict, settings: dict) -> float:
     # F3: delivery slack penalty (less free hours relative to horizon = worse)
     f3 = max(1.0 - cap["free_hrs"] / horizon, 0.0) * settings["w_slack"]
 
-    # F4: binary maintenance risk
+    # F4: binary maintenance risk (0 for manpower resources)
     f4 = cap["has_maint"] * settings["w_maint"]
 
-    return round(f1 + f2 + f3 + f4, 3)
+    # F5: material readiness — how long machine must wait for materials
+    material_delay = cap.get("material_delay_hrs", 0.0)
+    f5 = min(material_delay / horizon, 1.0) * settings.get("w_material", 0)
+
+    return round(f1 + f2 + f3 + f4 + f5, 3)
+
 
 
 def _log_selection(
