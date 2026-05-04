@@ -50,14 +50,10 @@ scheduler_events = {
     },
 }
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
-# Fixtures are exported/imported with: bench export-fixtures / bench migrate
-fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [["module", "=", "Machine Capacity Planner"]],
-    },
-]
+# ── Install / Uninstall hooks ─────────────────────────────────────────────────
+# Custom Fields are created programmatically (not via fixtures) to avoid
+# KeyError issues during migrate on fresh installs.
+after_install  = "machine_capacity_planner.setup.after_install"
 
 # ── Permissions ───────────────────────────────────────────────────────────────
 has_permission = {
