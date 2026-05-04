@@ -57,9 +57,6 @@ fixtures = [
         "doctype": "Custom Field",
         "filters": [["module", "=", "Machine Capacity Planner"]],
     },
-    {
-        "doctype": "Machine Selection Settings",
-    },
 ]
 
 # ── Permissions ───────────────────────────────────────────────────────────────
