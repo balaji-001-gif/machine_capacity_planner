@@ -31,9 +31,11 @@ def create_demo_data():
     _configure_settings()
     
     # 4. Create Demo Items & BOMs
+    raw_mat = "DEMO-RAW-001"
     item_code = "DEMO-SHAFT-001"
-    _create_item(item_code, "Demo Engine Shaft", company)
-    _create_bom(item_code, company)
+    _create_item(raw_mat, "Demo Raw Material", company, is_stock=1)
+    _create_item(item_code, "Demo Engine Shaft", company, is_stock=1)
+    _create_bom(item_code, raw_mat, company)
     
     # 5. Create a Work Order
     _create_work_order(item_code, company)
@@ -95,22 +97,21 @@ def _configure_settings():
     except Exception:
         pass
 
-def _create_item(item_code, item_name, company):
+def _create_item(item_code, item_name, company, is_stock=1):
     if not frappe.db.exists("Item", item_code):
         item = frappe.get_doc({
             "doctype": "Item",
             "item_code": item_code,
             "item_name": item_name,
-            "item_group": "Products",
-            "is_stock_item": 1,
+            "item_group": "Products" if item_code.startswith("DEMO-SHAFT") else "Raw Materials",
+            "is_stock_item": is_stock,
             "stock_uom": "Nos",
             "opening_stock": 0
         })
         item.insert(ignore_permissions=True)
         print(f"  ✅ Created Item: {item_code}")
 
-def _create_bom(item_code, company):
-    bom_name = f"BOM-{item_code}-001"
+def _create_bom(item_code, raw_mat, company):
     if not frappe.db.exists("BOM", {"item": item_code}):
         bom = frappe.get_doc({
             "doctype": "BOM",
@@ -119,6 +120,9 @@ def _create_bom(item_code, company):
             "company": company,
             "is_active": 1,
             "is_default": 1,
+            "items": [
+                {"item_code": raw_mat, "qty": 1, "uom": "Nos", "rate": 100}
+            ],
             "operations": [
                 {"operation": "CNC Turning", "workstation": "CNC-GROUP", "time_in_mins": 30},
                 {"operation": "Welding", "workstation": "WELD-GROUP", "time_in_mins": 15}
