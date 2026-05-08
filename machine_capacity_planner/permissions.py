@@ -7,7 +7,8 @@ def has_permission(doc, ptype="read", user=None):
     Manufacturing Manager and System Manager can read all logs.
     Other roles get read-only access.
     """
-    if frappe.has_role("System Manager") or frappe.has_role("Manufacturing Manager"):
+    roles = frappe.get_roles(user)
+    if "System Manager" in roles or "Manufacturing Manager" in roles:
         return True
     if ptype == "read":
         return True
